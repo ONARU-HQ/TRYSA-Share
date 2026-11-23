@@ -1,0 +1,41 @@
+name = "trysa-share"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Expiry + storage cleanup every 15 minutes.
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+SUPABASE_URL = "https://ccaxvjrgjpaixvyrgizn.supabase.co"
+# Public publishable (anon) key – safe for browsers. Set before deploying.
+SUPABASE_PUBLISHABLE_KEY = "REPLACE_WITH_PUBLISHABLE_KEY"
+PUBLIC_BASE_URL = "https://link.trysa.app"
+ALLOWED_ORIGINS = "https://link.trysa.app,https://trysa.app,https://app.trysa.app"
+BUCKET = "trysa-share-private"
+# SUPABASE_SERVICE_ROLE_KEY is a secret:  wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+
+# Cloudflare rate limiting binding (per-IP, per-route-class).
+[[ratelimits]]
+name = "SHARE_RL"
+namespace_id = "7201"
+simple = { limit = 30, period = 60 }
+
+# IMPORTANT: routes are scoped to /s/*, /share* and /api/share/* only, so existing
+# permanent QR paths such as link.trysa.app/hicc-gallery never reach this Worker.
+# Production routes are intentionally commented out until staging sign-off.
+# routes = [
+#   { pattern = "link.trysa.app/s/*", zone_name = "trysa.app" },
+#   { pattern = "link.trysa.app/share*", zone_name = "trysa.app" },
+#   { pattern = "link.trysa.app/api/share/*", zone_name = "trysa.app" },
+# ]
+
+[env.staging]
+name = "trysa-share-staging"
+vars = { SUPABASE_URL = "https://ccaxvjrgjpaixvyrgizn.supabase.co", SUPABASE_PUBLISHABLE_KEY = "REPLACE_WITH_PUBLISHABLE_KEY", PUBLIC_BASE_URL = "https://trysa-share-staging.workers.dev", ALLOWED_ORIGINS = "https://trysa-share-staging.workers.dev", BUCKET = "trysa-share-private" }
+
+[[env.staging.ratelimits]]
+name = "SHARE_RL"
+namespace_id = "7202"
+simple = { limit = 30, period = 60 }
