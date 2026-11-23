@@ -104,10 +104,19 @@ async function route(session) {
 }
 route((await sb.auth.getSession()).data.session);
 
+const friendlyAuthError = (e) => /hook/i.test(e.message)
+  ? 'Email sign-in links are unavailable right now. Please sign in with your TRYSA password.'
+  : /invalid login/i.test(e.message) ? 'Email or password is incorrect.' : e.message;
+$('passwordLogin').onclick = async () => {
+  $('loginMsg').textContent = 'Signing in…';
+  const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('password').value });
+  $('loginMsg').textContent = error ? friendlyAuthError(error) : '';
+};
+$('password').onkeydown = (e) => { if (e.key === 'Enter') $('passwordLogin').click(); };
 $('login').onclick = async () => {
   const email = $('email').value.trim();
   const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + '/share/' } });
-  $('loginMsg').textContent = error ? error.message : 'Check your email for the sign-in link.';
+  $('loginMsg').textContent = error ? friendlyAuthError(error) : 'Check your email for the sign-in link.';
 };
 $('meBtn').onclick = async () => { if (confirm(`Signed in as ${state.me?.name || ''}. Sign out?`)) { await sb.auth.signOut(); location.reload(); } };
 
