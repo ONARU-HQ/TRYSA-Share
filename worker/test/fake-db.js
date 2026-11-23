@@ -11,6 +11,7 @@ function matches(row, key, cond) {
     case 'neq': return String(val) !== arg;
     case 'is': return arg === 'null' ? val == null : String(val) === arg;
     case 'lt': return val < arg;
+    case 'ilike': return val != null && new RegExp('^' + arg.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$', 'i').test(String(val));
     case 'in': return arg.slice(1, -1).split(',').includes(String(val));
     default: throw new Error(`unsupported op ${op}`);
   }
@@ -37,7 +38,7 @@ function filter(rows, filters) {
 
 export function createFakeDb({ users = {}, now = () => Date.now() } = {}) {
   const t = { trysa_share_sessions: [], trysa_share_files: [], trysa_share_receipts: [], trysa_share_events: [],
-    profiles: [], workspace_members: [], connect_notifications: [] };
+    profiles: [], workspace_members: [], connect_notifications: [], trysa_share_push_subscriptions: [] };
   const objects = new Map();
   const ts = () => new Date(now()).toISOString();
   const defaults = {
@@ -74,6 +75,20 @@ export function createFakeDb({ users = {}, now = () => Date.now() } = {}) {
       for (const r of rows) Object.assign(r, patch);
       return structuredClone(rows);
     },
+    async upsert(table, rows, onConflict) {
+      const out = [];
+      for (const r of rows) {
+        const hit = t[table].find((x) => x[onConflict] === r[onConflict]);
+        if (hit) { Object.assign(hit, r); out.push(structuredClone(hit)); }
+        else { const row = { id: crypto.randomUUID(), ...r }; t[table].push(row); out.push(structuredClone(row)); }
+      }
+      return out;
+    },
+    async delete(table, filters) {
+      const gone = filter(t[table], filters);
+      t[table] = t[table].filter((r) => !gone.includes(r));
+      return structuredClone(gone);
+    },
     async rpc(fn, args) {
       if (fn === 'trysa_share_pin_failure') {
         const s = t.trysa_share_sessions.find((x) => x.id === args.p_session_id); s.pin_failures++; return s.pin_failures;
@@ -94,9 +109,15 @@ export function createFakeDb({ users = {}, now = () => Date.now() } = {}) {
     },
     async signUpload(path) { return `https://fake.supabase.co/storage/v1/object/upload/sign/trysa-share-private/${path}?token=x`; },
     async objectSize(path) { return objects.has(path) ? objects.get(path).byteLength : null; },
-    async getObject(path) {
+    async getObject(path, range) {
       const bytes = objects.get(path);
       if (!bytes) throw new SupabaseError('missing', 404);
+      const m = range && range.match(/^bytes=(\d+)-(\d*)$/);
+      if (m) {
+        const start = Number(m[1]), end = m[2] ? Math.min(Number(m[2]), bytes.byteLength - 1) : bytes.byteLength - 1;
+        const part = bytes.slice(start, end + 1);
+        return new Response(part, { status: 206, headers: { 'content-length': String(part.byteLength), 'content-range': `bytes ${start}-${end}/${bytes.byteLength}` } });
+      }
       return new Response(bytes, { headers: { 'content-length': String(bytes.byteLength) } });
     },
     async removeObjects(paths) { for (const p of paths) objects.delete(p); return paths; },

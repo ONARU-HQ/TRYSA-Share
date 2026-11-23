@@ -11,6 +11,7 @@ export const LIMITS = Object.freeze({
   defaultQrExpiryMinutes: 30, // PRD §10
   defaultRemoteExpiryMinutes: 24 * 60,
   hashVerifyMaxBytes: 256 * 1024 * 1024,
+  maxPreviewBytes: 300 * 1024,
 });
 
 // Unambiguous alphabet (no 0/O/1/I/L). 10 chars ≈ 50 bits; codes are also rate limited.
@@ -134,7 +135,16 @@ export function validateCreate(body, senderId) {
   const workspaceId = body.workspace_id == null ? null : body.workspace_id;
   if (workspaceId !== null && !isUuid(workspaceId)) throw new ValidationError('Invalid workspace');
 
-  return { mode, recipient, files: normalised, total, expiryMinutes: expiry, maxReceivers, pin, name, workspaceId };
+  // Optional preview: a small JPEG thumbnail generated (and EXIF-stripped) on the sender's device.
+  let previewSize = null;
+  if (body.preview != null) {
+    previewSize = Number(body.preview?.size);
+    if (!Number.isInteger(previewSize) || previewSize < 1 || previewSize > LIMITS.maxPreviewBytes)
+      throw new ValidationError('Preview image is too large');
+  }
+  const showPreview = previewSize != null && body.show_preview !== false;
+
+  return { mode, recipient, files: normalised, total, expiryMinutes: expiry, maxReceivers, pin, name, workspaceId, previewSize, showPreview };
 }
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TRYSA Share">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/share/manifest.webmanifest">
+<link rel="icon" href="/share/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/share/icon-180.png">
+<link rel="stylesheet" href="/share/app.css">
+<title>TRYSA Share</title>
+</head>
+<body>
+<div id="app">
+  <!-- ============================== sign in -->
+  <section id="signin" class="screen center" hidden>
+    <div class="card signin-card">
+      <div class="logo" aria-hidden="true"></div>
+      <h1>TRYSA Share</h1>
+      <p class="muted">Send photos, videos and files to anyone nearby or anywhere. Receivers don't need an account.</p>
+      <label class="field"><span>Email</span><input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+      <button class="pill-btn wide" id="login">Email me a sign-in link</button>
+      <p class="hint" id="loginMsg" role="status"></p>
+    </div>
+  </section>
+
+  <!-- ============================== home -->
+  <section id="home" class="screen" hidden>
+    <header class="topbar">
+      <div><div class="eyebrow">TRYSA</div><h1 class="title">Share</h1></div>
+      <button class="avatar-btn" id="meBtn" aria-label="Account"></button>
+    </header>
+
+    <button class="receiving" id="receivingBtn" aria-haspopup="dialog">
+      <span class="dot" id="receivingDot"></span>
+      <span><b id="receivingLabel">Receiving Off</b><small id="receivingSub">Tap to be discoverable nearby</small></span>
+      <svg viewBox="0 0 24 24" class="chev"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+
+    <label class="pick" id="pick">
+      <input id="files" type="file" multiple>
+      <span class="pick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+      <b>Choose photos & files</b>
+      <small>Original quality · up to 50 items, 2 GB</small>
+    </label>
+
+    <div class="section-head"><h2>Nearby</h2><span class="muted small" id="nearbyState">Looking…</span></div>
+    <div class="people-row" id="nearbyRow"></div>
+
+    <div class="segment" role="tablist">
+      <button role="tab" class="on" data-tab="inbox">Inbox <span class="badge" id="inboxBadge" hidden></span></button>
+      <button role="tab" data-tab="history">Sent</button>
+    </div>
+    <div id="inboxList" class="list"></div>
+    <div id="historyList" class="list" hidden></div>
+  </section>
+</div>
+
+<!-- ============================== share sheet (ref: iOS-style share sheet) -->
+<div class="sheet-backdrop" id="sheetBackdrop" hidden>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head">
+      <img class="sheet-thumb" id="sheetThumb" alt="">
+      <div class="sheet-titles">
+        <h2 id="sheetTitle">1 Photo Selected</h2>
+        <button class="options-pill" id="optionsBtn">Options <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+      <button class="round-close" id="sheetClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="carousel" id="carousel"></div>
+    <div class="dest-people" id="destPeople"></div>
+    <div class="dest-row">
+      <button class="dest" id="destNearby"><span class="dest-icon i-nearby"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="4.5"/><path d="M15.5 32.5a12 12 0 0 1 0-17M32.5 15.5a12 12 0 0 1 0 17M10 38a19.8 19.8 0 0 1 0-28M38 10a19.8 19.8 0 0 1 0 28"/></svg></span><span>Nearby</span></button>
+      <button class="dest" id="destQr"><span class="dest-icon i-qr"><svg viewBox="0 0 48 48"><path d="M10 10h11v11H10zM27 10h11v11H27zM10 27h11v11H10zM27 27h4v4h-4zM34 27h4v4h-4zM27 34h4v4h-4zM34 34h4v4h-4zM14 14h3v3h-3zM31 14h3v3h-3zM14 31h3v3h-3z"/></svg></span><span>QR Code</span></button>
+      <button class="dest" id="destContacts"><span class="dest-icon i-contacts"><svg viewBox="0 0 48 48"><circle cx="24" cy="18" r="7"/><path d="M11 38c1.8-7 7-10 13-10s11.2 3 13 10"/></svg></span><span>Contacts</span></button>
+      <button class="dest" id="destLink"><span class="dest-icon i-link"><svg viewBox="0 0 48 48"><path d="M21 27a7 7 0 0 0 10 0l6-6a7 7 0 0 0-10-10l-2 2M27 21a7 7 0 0 0-10 0l-6 6a7 7 0 0 0 10 10l2-2"/></svg></span><span>Copy Link</span></button>
+    </div>
+  </section>
+</div>
+
+<!-- ============================== options -->
+<div class="sheet-backdrop" id="optionsBackdrop" hidden>
+  <section class="sheet small-sheet" role="dialog" aria-modal="true" aria-labelledby="optTitle">
+    <div class="sheet-bar"><span></span><h2 id="optTitle">Options</h2><button class="text-btn" id="optionsDone">Done</button></div>
+    <div class="opt-group">
+      <label class="opt-row"><span>Link expires</span><select id="optExpiry"><option value="30">30 minutes</option><option value="120">2 hours</option><option value="1440">24 hours</option><option value="10080">7 days</option></select></label>
+      <label class="opt-row"><span>People who can receive</span><select id="optReceivers"><option value="1">1</option><option value="5">Up to 5</option><option value="20">Up to 20</option></select></label>
+      <label class="opt-row"><span>PIN</span><input id="optPin" inputmode="numeric" maxlength="8" placeholder="None"></label>
+      <label class="opt-row"><span>Show preview before accept</span><input id="optPreview" type="checkbox" class="switch"></label>
+      <div class="opt-row"><span>Quality</span><span class="muted">Original</span></div>
+    </div>
+    <p class="hint">Expiry, receivers and PIN apply to QR codes and links. Nearby and Contacts always need the receiver's Accept.</p>
+  </section>
+</div>
+
+<!-- ============================== receiving mode -->
+<div class="sheet-backdrop" id="recvBackdrop" hidden>
+  <section class="sheet small-sheet" role="dialog" aria-modal="true" aria-labelledby="recvTitle">
+    <div class="sheet-bar"><span></span><h2 id="recvTitle">Receiving</h2><button class="text-btn" id="recvDone">Done</button></div>
+    <div class="opt-group radio" id="recvModes">
+      <button data-mode="off"><b>Receiving Off</b><small>Nobody nearby can see you</small></button>
+      <button data-mode="contacts"><b>Contacts Only</b><small>People you share a workspace or history with</small></button>
+      <button data-mode="everyone"><b>Everyone for 10 Minutes</b><small>Anyone with TRYSA on this network</small></button>
+    </div>
+    <label class="opt-row card-row"><span>Notifications when the app is closed</span><input id="pushToggle" type="checkbox" class="switch"></label>
+    <p class="hint" id="pushHint">Every transfer still asks you to Accept or Decline.</p>
+  </section>
+</div>
+
+<!-- ============================== contacts picker -->
+<div class="sheet-backdrop" id="contactsBackdrop" hidden>
+  <section class="sheet tall-sheet" role="dialog" aria-modal="true" aria-labelledby="ctTitle">
+    <div class="sheet-bar"><button class="text-btn" id="contactsCancel">Cancel</button><h2 id="ctTitle">Send to</h2><span></span></div>
+    <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><input id="contactSearch" placeholder="Name or @username" autocomplete="off"></label>
+    <div class="list" id="contactList"></div>
+  </section>
+</div>
+
+<!-- ============================== person / transfer card (ref: "Connecting" person card) -->
+<div class="overlay" id="personOverlay" hidden>
+  <article class="person-card" id="personCard">
+    <div class="pc-media" id="pcMedia"></div>
+    <div class="pc-top">
+      <h2 class="pc-name" id="pcName">Ada</h2>
+      <div class="pc-status" id="pcStatus"><span class="check" id="pcCheck" hidden>✓</span><span class="spinner" id="pcSpinner" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span id="pcStatusText">Connecting</span></div>
+    </div>
+    <div class="pc-progress" id="pcProgress" hidden><i></i></div>
+    <footer class="pc-foot">
+      <div class="pc-who"><span class="mini-avatar" id="pcAvatar"><b class="online" id="pcOnline"></b></span><span><b id="pcHandle">@ada</b><small id="pcMeta">Nearby</small></span></div>
+      <button class="pill-btn" id="pcAction"><span id="pcActionIcon">＋</span> <span id="pcActionText">Add person</span></button>
+    </footer>
+  </article>
+  <button class="link-btn under-card" id="pcSecondary" hidden></button>
+</div>
+
+<!-- ============================== incoming request (ref: system-style accept/decline alert) -->
+<div class="overlay alert-overlay" id="alertOverlay" hidden>
+  <div class="alert" role="alertdialog" aria-modal="true" aria-labelledby="alertTitle" aria-describedby="alertMsg">
+    <div class="alert-text"><h2 id="alertTitle">TRYSA Share</h2><p id="alertMsg">Samson would like to share a photo.</p></div>
+    <div class="alert-preview" id="alertPreview" hidden><img id="alertImg" alt=""></div>
+    <div class="alert-progress" id="alertProgress" hidden><div class="bar"><i></i></div><small id="alertProgressText"></small></div>
+    <div class="alert-actions" id="alertActions"><button id="alertDecline">Decline</button><button id="alertAccept" class="strong">Accept</button></div>
+  </div>
+</div>
+
+<!-- ============================== received files -->
+<div class="sheet-backdrop" id="receivedBackdrop" hidden>
+  <section class="sheet tall-sheet" role="dialog" aria-modal="true" aria-labelledby="rcTitle">
+    <div class="sheet-bar"><span></span><h2 id="rcTitle">Received</h2><button class="text-btn" id="receivedDone">Done</button></div>
+    <div class="carousel" id="receivedCarousel"></div>
+    <div class="received-actions">
+      <button class="pill-btn wide" id="saveShare">Save to Photos</button>
+      <button class="pill-btn wide ghost" id="saveFiles">Save to Files</button>
+    </div>
+    <p class="hint" id="receivedHint"></p>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="/share/vendor/supabase.js"></script>
+<script src="/share/vendor/tus.min.js"></script>
+<script src="/share/vendor/qrcode.js"></script>
+<script type="module" src="/share/app.js"></script>
+</body>
+</html>

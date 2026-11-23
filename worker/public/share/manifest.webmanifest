@@ -1,0 +1,23 @@
+{
+  "name": "TRYSA Share",
+  "short_name": "Share",
+  "id": "/share/",
+  "start_url": "/share/",
+  "scope": "/share/",
+  "display": "standalone",
+  "background_color": "#f5f5f7",
+  "theme_color": "#f5f5f7",
+  "description": "Send photos, videos and files to anyone nearby or anywhere.",
+  "icons": [
+    { "src": "/share/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/share/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/share/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/share/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "share_target": {
+    "action": "/share/receive-share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": { "title": "title", "text": "text", "files": [{ "name": "media", "accept": ["image/*", "video/*", "application/pdf", "*/*"] }] }
+  }
+}

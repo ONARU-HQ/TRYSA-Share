@@ -6,8 +6,11 @@ import {
   contentDisposition, kindSummary, canTransition, SESSION_TERMINAL,
 } from './core.js';
 import { SupabaseError } from './db.js';
+import { zipStream } from './zip.js';
+import { checkContent, scanWithService } from './sniff.js';
+import { notifyUser, isAllowedEndpoint } from './push.js';
+import { roomKey } from './nearby.js';
 import { receiverPage } from './pages/receiver.js';
-import { senderPage } from './pages/sender.js';
 
 const MAX_PIN_FAILURES = 5;
 const json = (value, status = 200, headers = {}) =>
@@ -63,6 +66,35 @@ export function createApp({ db, env, now = () => Date.now() }) {
   const acceptedCount = async (sessionId) => (await db.select('trysa_share_receipts', {
     session_id: `eq.${sessionId}`, status: 'in.(accepted,downloading,downloaded)', select: 'id' })).length;
 
+  // Public-facing identity for a TRYSA user, honouring their avatar privacy setting.
+  const personOf = (p) => p && ({ id: p.id, name: p.full_name || p.username || 'TRYSA user', username: p.username || null,
+    avatar_url: p.show_avatar === false ? null : p.avatar_url || null });
+  const PROFILE_COLS = 'id,full_name,username,avatar_url,show_avatar';
+
+  async function contacts(uid, rawQuery) {
+    const q = String(rawQuery || '').trim().replace(/^@/, '').replace(/[,()*%\\]/g, '').slice(0, 40);
+    const ids = new Set();
+    // 1) people you already exchanged files with
+    const mine = await db.select('trysa_share_sessions', { sender_user_id: `eq.${uid}`, mode: 'eq.remote', select: 'id', order: 'created_at.desc', limit: '50' });
+    if (mine.length) for (const r of await db.select('trysa_share_receipts', { session_id: `in.(${mine.map((m) => m.id).join(',')})`, select: 'receiver_user_id' })) if (r.receiver_user_id) ids.add(r.receiver_user_id);
+    // 2) members of your workspaces
+    const ws = await db.select('workspace_members', { user_id: `eq.${uid}`, select: 'workspace_id' });
+    if (ws.length) for (const m of await db.select('workspace_members', { workspace_id: `in.(${ws.map((w) => w.workspace_id).join(',')})`, select: 'user_id', limit: '500' })) ids.add(m.user_id);
+    ids.delete(uid);
+    let people = [];
+    if (ids.size) {
+      const filters = { id: `in.(${[...ids].join(',')})`, select: PROFILE_COLS, limit: '20', order: 'full_name.asc' };
+      if (q.length >= 2) filters.or = `(full_name.ilike.*${q}*,username.ilike.*${q}*)`;
+      people = await db.select('profiles', filters);
+    }
+    // 3) anyone else only by their exact @username (no open directory search)
+    if (q.length >= 3) {
+      const exact = await db.one('profiles', { username: `ilike.${q}`, select: PROFILE_COLS });
+      if (exact && exact.id !== uid && !people.some((p) => p.id === exact.id)) people.unshift(exact);
+    }
+    return people.map(personOf);
+  }
+
   // ================================================================ sender / account API
   async function api(request, ctx) {
     const user = await requireUser(request);
@@ -72,6 +104,20 @@ export function createApp({ db, env, now = () => Date.now() }) {
 
     switch (body.action) {
       case 'create': return create(body, user);
+      case 'me': {
+        const p = await db.one('profiles', { id: `eq.${uid}`, select: PROFILE_COLS });
+        return json({ person: personOf(p || { id: uid }), push_public_key: env.VAPID_PUBLIC_KEY || null });
+      }
+      case 'contacts': return json({ people: await contacts(uid, body.q) });
+      case 'push_subscribe': {
+        if (!isAllowedEndpoint(body.endpoint)) throw new ValidationError('Unsupported push service');
+        await db.upsert('trysa_share_push_subscriptions', [{ user_id: uid, endpoint: body.endpoint, failure_count: 0 }], 'endpoint');
+        return json({ subscribed: true });
+      }
+      case 'push_unsubscribe': {
+        await db.delete('trysa_share_push_subscriptions', { user_id: `eq.${uid}`, endpoint: `eq.${String(body.endpoint || '')}` });
+        return json({ subscribed: false });
+      }
       case 'sent': {
         const rows = await db.select('trysa_share_sessions', {
           sender_user_id: `eq.${uid}`, order: 'created_at.desc', limit: '50',
@@ -84,14 +130,20 @@ export function createApp({ db, env, now = () => Date.now() }) {
         if (!receipts.length) return json({ transfers: [] });
         const ids = receipts.map((r) => r.session_id).join(',');
         const sessions = await db.select('trysa_share_sessions', { id: `in.(${ids})`,
-          select: 'id,name,status,sender_display_name,expires_at,total_bytes,created_at' });
+          select: 'id,name,status,sender_user_id,sender_display_name,expires_at,total_bytes,created_at,show_preview,preview_status' });
         const files = await db.select('trysa_share_files', { session_id: `in.(${ids})`, select: 'id,session_id,original_name,mime_type,byte_size' });
+        const senderIds = [...new Set(sessions.map((s) => s.sender_user_id))];
+        const senders = senderIds.length ? await db.select('profiles', { id: `in.(${senderIds.join(',')})`, select: PROFILE_COLS }) : [];
         const t = now();
         return json({ transfers: receipts.map((receipt) => {
           const session = sessions.find((s) => s.id === receipt.session_id);
           if (!session || ['draft', 'uploading', 'failed'].includes(session.status)) return null;
-          return { receipt, session: { ...session, receivable: isReceivable(session, t) },
-            files: files.filter((f) => f.session_id === session.id) };
+          const { show_preview, preview_status, ...rest } = session;
+          const sessionFiles = files.filter((f) => f.session_id === session.id);
+          return { receipt, sender: personOf(senders.find((p) => p.id === session.sender_user_id) || { id: session.sender_user_id, full_name: session.sender_display_name }),
+            session: { ...rest, receivable: isReceivable(session, t), kinds: kindSummary(sessionFiles),
+              preview_url: show_preview && preview_status === 'verified' ? `/api/share/v1/sessions/${session.id}/preview` : null },
+            files: sessionFiles };
         }).filter(Boolean) });
       }
     }
@@ -102,7 +154,7 @@ export function createApp({ db, env, now = () => Date.now() }) {
     const isSender = session.sender_user_id === uid;
 
     if (['publish', 'status', 'revoke'].includes(body.action) && !isSender) throw new ValidationError('Transfer not found', 404);
-    if (body.action === 'publish') return publish(session, uid);
+    if (body.action === 'publish') return publish(session, uid, ctx);
     if (body.action === 'status') return status(session);
     if (body.action === 'revoke') return revoke(session, uid, ctx);
 
@@ -147,7 +199,8 @@ export function createApp({ db, env, now = () => Date.now() }) {
       try {
         await db.insert('trysa_share_sessions', [{ id, sender_user_id: user.id, workspace_id: input.workspaceId, mode: input.mode,
           name: input.name, short_code: code, status: 'uploading', expires_at: expires, max_receivers: input.maxReceivers,
-          total_bytes: input.total, sender_display_name: display, pin_hash }]);
+          total_bytes: input.total, sender_display_name: display, pin_hash, show_preview: input.showPreview,
+          preview_path: input.previewSize ? `${user.id}/${id}/preview.jpg` : null, preview_status: input.previewSize ? 'pending' : 'none' }]);
         break;
       } catch (e) {
         if (!(e instanceof SupabaseError && e.status === 409) || attempt >= 3) throw e;
@@ -163,17 +216,32 @@ export function createApp({ db, env, now = () => Date.now() }) {
       await db.insert('trysa_share_files', rows);
       if (input.recipient) await db.insert('trysa_share_receipts', [{ session_id: id, receiver_kind: 'account', receiver_user_id: input.recipient, status: 'requested' }]);
       const uploads = [];
-      for (const r of rows) uploads.push({ file_id: r.id, name: r.original_name, upload_url: await db.signUpload(r.object_path) });
+      for (const r of rows) uploads.push({ file_id: r.id, name: r.original_name, object_path: r.object_path, upload_url: await db.signUpload(r.object_path) });
+      const preview_upload_url = input.previewSize ? await db.signUpload(`${user.id}/${id}/preview.jpg`) : null;
       await event(id, 'created', { actor: user.id, metadata: { mode: input.mode, files: rows.length, bytes: input.total }, key: 'created' });
       return json({ session_id: id, short_code: code, status: 'uploading', expires_at: expires, mode: input.mode,
-        share_url: input.mode === 'qr' ? `${base}/s/${code}` : null, uploads }, 201);
+        share_url: input.mode === 'qr' ? `${base}/s/${code}` : null, uploads, preview_upload_url,
+        // Large files: resumable TUS upload with the sender's own session (see migration v3 storage policy).
+        resumable: env.SUPABASE_URL ? { endpoint: `${env.SUPABASE_URL.replace(/\/$/, '')}/storage/v1/upload/resumable`, bucket: db.bucket } : null }, 201);
     } catch (e) {
       await db.update('trysa_share_sessions', { id: `eq.${id}` }, { status: 'failed', updated_at: iso(now()) }).catch(() => {});
       throw e;
     }
   }
 
-  async function publish(session, uid) {
+  async function contentVerdict(file) {
+    const head = new Uint8Array(await (await db.getObject(file.object_path, 'bytes=0-15')).arrayBuffer());
+    const basic = checkContent(file.mime_type, head);
+    if (!basic.ok || !env.SCANNER_URL) return basic;
+    try {
+      return await scanWithService(env, (await db.getObject(file.object_path)).body, file.original_name);
+    } catch (e) {
+      console.error('scanner', e.message);
+      return env.SCANNER_REQUIRED === 'true' ? { ok: false, reason: 'Malware scanning is unavailable. Try again shortly.' } : { ok: true };
+    }
+  }
+
+  async function publish(session, uid, ctx) {
     if (session.status === 'ready') return json({ status: 'ready', session_id: session.id }); // idempotent
     if (!['draft', 'uploading'].includes(session.status) || Date.parse(session.expires_at) <= now())
       throw new ValidationError('This transfer can no longer be published', 409);
@@ -184,6 +252,12 @@ export function createApp({ db, env, now = () => Date.now() }) {
       if (f.upload_status === 'verified') continue;
       const size = await db.objectSize(f.object_path);
       if (size == null) { missing.push(f.id); continue; }
+      const verdict = size === Number(f.byte_size) ? await contentVerdict(f) : { ok: true };
+      if (!verdict.ok) {
+        await db.update('trysa_share_files', { id: `eq.${f.id}` }, { upload_status: 'rejected' });
+        await event(session.id, 'content_rejected', { actor: uid, metadata: { file_id: f.id, reason: verdict.reason }, key: `content:${f.id}` });
+        throw new ValidationError(`${f.original_name}: ${verdict.reason}`, 422);
+      }
       if (size !== Number(f.byte_size) || !(await hashMatches(f))) {
         await db.update('trysa_share_files', { id: `eq.${f.id}` }, { upload_status: 'rejected' });
         await event(session.id, 'integrity_failed', { actor: uid, metadata: { file_id: f.id, expected: f.byte_size, actual: size }, key: `integrity:${f.id}` });
@@ -192,6 +266,18 @@ export function createApp({ db, env, now = () => Date.now() }) {
       await db.update('trysa_share_files', { id: `eq.${f.id}` }, { upload_status: 'verified', verified_at: iso(now()) });
     }
     if (missing.length) return json({ error: 'Some files are still uploading', missing_file_ids: missing }, 409);
+    if (session.preview_path && session.preview_status === 'pending') {
+      // A bad or missing preview never blocks the transfer; it is simply not shown.
+      let ok = false;
+      try {
+        const size = await db.objectSize(session.preview_path);
+        if (size && size <= LIMITS.maxPreviewBytes) {
+          const head = new Uint8Array(await (await db.getObject(session.preview_path, 'bytes=0-15')).arrayBuffer());
+          ok = head[0] === 0xff && head[1] === 0xd8;
+        }
+      } catch { ok = false; }
+      await db.update('trysa_share_sessions', { id: `eq.${session.id}` }, { preview_status: ok ? 'verified' : 'none' });
+    }
 
     const updated = await db.update('trysa_share_sessions', { id: `eq.${session.id}`, status: 'in.(draft,uploading)' },
       { status: 'ready', updated_at: iso(now()) });
@@ -207,6 +293,10 @@ export function createApp({ db, env, now = () => Date.now() }) {
             body: session.name, link: `/share/receive?session=${session.id}`, metadata: { session_id: session.id } }]);
         } catch (e) { console.error('notification failed', e.message); }
       }
+    }
+    if (session.mode === 'remote') {
+      const receipt = await db.one('trysa_share_receipts', { session_id: `eq.${session.id}`, select: 'receiver_user_id' });
+      if (receipt?.receiver_user_id) ctx?.waitUntil?.(notifyUser(db, env, receipt.receiver_user_id).catch((e) => console.error('push', e.message)));
     }
     return json({ status: 'ready', session_id: session.id, share_url: session.mode === 'qr' ? `${base}/s/${session.short_code}` : null });
   }
@@ -268,7 +358,10 @@ export function createApp({ db, env, now = () => Date.now() }) {
       availability, code,
       sender: session.sender_display_name || 'A TRYSA user', name: session.name,
       count: files.length, total_bytes: Number(session.total_bytes), kinds: kindSummary(files),
+      types: files.map((f) => f.mime_type),
       expires_at: session.expires_at, pin_required: !!session.pin_hash,
+      preview_url: session.show_preview && session.preview_status === 'verified' ? `/s/${code}/preview` : null,
+      zip_url: files.length > 1 ? `/s/${code}/zip` : null,
       files: claimed ? publicFiles(files, code) : null,
     };
     return new Response(receiverPage({ nonce, code, state }), { status: 200, headers });
@@ -328,12 +421,7 @@ export function createApp({ db, env, now = () => Date.now() }) {
 
     const range = request.headers.get('range');
     const upstream = await db.getObject(file.object_path, range);
-    if (receipt.status === 'accepted') {
-      await db.update('trysa_share_receipts', { id: `eq.${receipt.id}`, status: 'eq.accepted' }, { status: 'downloading', download_started_at: iso(now()) });
-    }
-    if (canTransition(session.status, 'transferring') && session.status !== 'transferring') {
-      await db.update('trysa_share_sessions', { id: `eq.${session.id}`, status: 'in.(ready,claimed)' }, { status: 'transferring', updated_at: iso(now()) });
-    }
+    await markStarted(session, receipt);
 
     const size = Number(file.byte_size);
     const fullRequest = !range || /^bytes=0-(\d*)$/.test(range) && (!range.split('-')[1] || Number(range.split('-')[1]) >= size - 1);
@@ -349,6 +437,37 @@ export function createApp({ db, env, now = () => Date.now() }) {
       'accept-ranges': 'bytes', 'x-content-type-options': 'nosniff' });
     for (const h of ['content-length', 'content-range']) { const v = upstream.headers.get(h); if (v) headers.set(h, v); }
     return new Response(readable, { status: upstream.status === 206 ? 206 : 200, headers });
+  }
+
+  async function markStarted(session, receipt) {
+    if (receipt.status === 'accepted') {
+      await db.update('trysa_share_receipts', { id: `eq.${receipt.id}`, status: 'eq.accepted' }, { status: 'downloading', download_started_at: iso(now()) });
+    }
+    if (canTransition(session.status, 'transferring') && session.status !== 'transferring') {
+      await db.update('trysa_share_sessions', { id: `eq.${session.id}`, status: 'in.(ready,claimed)' }, { status: 'transferring', updated_at: iso(now()) });
+    }
+  }
+
+  // "Download all" as one streamed ZIP; each file counts as delivered once its bytes are written.
+  async function streamZip(session, receipt, actor) {
+    if (!isReceivable(session, now())) return fail('This share has expired or was cancelled', 410);
+    const files = (await filesOf(session.id)).filter((f) => f.upload_status === 'verified');
+    if (!files.length) return fail('File not found', 404);
+    await markStarted(session, receipt);
+    const { stream, length } = zipStream(
+      files.map((f) => ({ name: f.original_name, size: Number(f.byte_size), mtime: Date.parse(f.created_at) || now() })),
+      async (_e, i) => (await db.getObject(files[i].object_path)).body,
+      (_e, i) => fileDelivered(session, receipt, files[i], actor).catch((e) => console.error('delivery record', e.message)));
+    const zipName = `${(session.name || 'TRYSA Share').replace(/\.zip$/i, '').slice(0, 100)}.zip`;
+    return new Response(stream, { headers: { 'content-type': 'application/zip', 'content-length': String(length),
+      'content-disposition': contentDisposition(zipName), 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff' } });
+  }
+
+  async function servePreview(session) {
+    if (!session.show_preview || session.preview_status !== 'verified' || !isReceivable(session, now())) return fail('No preview', 404);
+    const up = await db.getObject(session.preview_path);
+    return new Response(up.body, { headers: { 'content-type': 'image/jpeg', 'cache-control': 'private, max-age=300',
+      'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'" } });
   }
 
   async function fileDelivered(session, receipt, file, actor) {
@@ -374,6 +493,7 @@ export function createApp({ db, env, now = () => Date.now() }) {
     if (!session) return fail('Not found', 404);
     const receipt = await claimFromCookie(request, session);
     if (!receipt) return fail('Open the share link and tap Accept first', 403);
+    if (fileId === 'zip') return streamZip(session, receipt, null);
     return streamFile(request, ctx, session, receipt, fileId, null);
   }
 
@@ -384,7 +504,18 @@ export function createApp({ db, env, now = () => Date.now() }) {
     const receipt = session && await db.one('trysa_share_receipts', { session_id: `eq.${sessionId}`, receiver_user_id: `eq.${user.id}`, select: '*' });
     if (!receipt) return fail('Not found', 404);
     if (!['accepted', 'downloading', 'downloaded'].includes(receipt.status)) return fail('Accept the transfer first', 403);
+    if (fileId === 'zip') return streamZip(session, receipt, user.id);
     return streamFile(request, ctx, session, receipt, fileId, user.id);
+  }
+
+  async function accountPreview(request, sessionId) {
+    const user = await requireUser(request);
+    if (!isUuid(sessionId)) return fail('Not found', 404);
+    const session = await db.one('trysa_share_sessions', { id: `eq.${sessionId}`, select: '*' });
+    if (!session) return fail('Not found', 404);
+    const allowed = session.sender_user_id === user.id ||
+      !!(await db.one('trysa_share_receipts', { session_id: `eq.${sessionId}`, receiver_user_id: `eq.${user.id}`, select: 'id' }));
+    return allowed ? servePreview(session) : fail('Not found', 404);
   }
 
   // ================================================================ cleanup (cron)
@@ -395,7 +526,10 @@ export function createApp({ db, env, now = () => Date.now() }) {
       await db.removeObjects(live.map((f) => f.object_path));
       await db.update('trysa_share_files', { session_id: `eq.${session.id}` }, { upload_status: 'deleted' });
     }
-    const patch = { cleaned_at: iso(now()), updated_at: iso(now()) };
+    if (session.preview_path && session.preview_status !== 'deleted') {
+      await db.removeObjects([session.preview_path]);
+    }
+    const patch = { cleaned_at: iso(now()), updated_at: iso(now()), ...(session.preview_path ? { preview_status: 'deleted' } : {}) };
     if (!['revoked', 'failed', 'expired'].includes(session.status)) patch.status = 'expired';
     await db.update('trysa_share_sessions', { id: `eq.${session.id}` }, patch);
     await event(session.id, 'cleaned', { metadata: { files: live.length }, key: 'cleaned' });
@@ -412,6 +546,49 @@ export function createApp({ db, env, now = () => Date.now() }) {
     return cleaned;
   }
 
+  // ================================================================ nearby (WebSocket → Durable Object)
+  // Browsers cannot set headers on WebSockets, so the access token travels as a subprotocol:
+  //   new WebSocket(url, ['trysa', accessToken])   — kept out of URLs and access logs.
+  async function nearbyConnect(request) {
+    if (request.headers.get('upgrade') !== 'websocket') return fail('Expected WebSocket', 426);
+    if (!env.NEARBY) return fail('Nearby is not enabled', 503);
+    const origin = request.headers.get('origin');
+    if (origin && !allowed.has(origin)) return fail('Origin not allowed', 403);
+    const protocols = (request.headers.get('sec-websocket-protocol') || '').split(',').map((x) => x.trim());
+    if (protocols[0] !== 'trysa' || !protocols[1]) return fail('Sign in to TRYSA', 401);
+    const user = await db.getUser(protocols[1]);
+    if (!user) return fail('Sign in to TRYSA', 401);
+    const room = await roomKey(request.headers.get('cf-connecting-ip'), env.NEARBY_SALT || '');
+    if (!room) return fail('Network not supported for Nearby', 400);
+    const profile = await db.one('profiles', { id: `eq.${user.id}`, select: PROFILE_COLS });
+    const people = await contacts(user.id, '');
+    const headers = new Headers(request.headers);
+    headers.delete('sec-websocket-protocol'); // the token never reaches the room
+    headers.set('x-trysa-person', JSON.stringify(personOf(profile || { id: user.id })));
+    headers.set('x-trysa-contacts', JSON.stringify(people.map((p) => p.id)));
+    const stub = env.NEARBY.get(env.NEARBY.idFromName(room));
+    return stub.fetch(new Request(request.url, { headers }));
+  }
+
+  // ================================================================ installable web app (static assets)
+  async function appShell(request, path) {
+    // Share-target POST arriving before the service worker is installed: just open the app.
+    if (path === '/share/receive-share') return Response.redirect(`${base}/share/`, 303);
+    if (!env.ASSETS) return fail('Not found', 404);
+    const res = await env.ASSETS.fetch(request);
+    const out = new Response(res.body, res);
+    const supa = env.SUPABASE_URL ? new URL(env.SUPABASE_URL).origin : '';
+    out.headers.set('content-security-policy', [
+      "default-src 'self'", "script-src 'self'", "style-src 'self'", "style-src-attr 'unsafe-inline'",
+      `img-src 'self' data: blob: ${supa} https:`, "media-src 'self' blob:", `connect-src 'self' ${supa}`,
+      "worker-src 'self'", "manifest-src 'self'", "frame-ancestors 'none'", "base-uri 'none'", "form-action 'self'"].join('; '));
+    out.headers.set('x-content-type-options', 'nosniff');
+    out.headers.set('referrer-policy', 'no-referrer');
+    out.headers.set('permissions-policy', 'camera=(), microphone=(), geolocation=()');
+    if (path.endsWith('/sw.js')) out.headers.set('cache-control', 'no-cache');
+    return out;
+  }
+
   // ================================================================ router
   async function handle(request, ctx) {
     const url = new URL(request.url);
@@ -419,21 +596,27 @@ export function createApp({ db, env, now = () => Date.now() }) {
     const m = (re) => path.match(re);
     let r;
     try {
+      if (path === '/api/share/v1/nearby') {
+        if (await rateLimited(request, 'nearby')) return fail('Too many requests', 429);
+        return await nearbyConnect(request);
+      }
       if (path.startsWith('/api/share/')) {
         const h = cors(request);
         if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: h });
         if (await rateLimited(request, 'api')) return fail('Too many requests', 429, h);
         let res;
-        if (path === '/api/share/v1' && request.method === 'POST') res = await api(request, ctx);
+        if (path === '/api/share/v1/config' && request.method === 'GET') {
+          res = json({ supabase_url: env.SUPABASE_URL, publishable_key: env.SUPABASE_PUBLISHABLE_KEY, push_public_key: env.VAPID_PUBLIC_KEY || null },
+            200, { 'cache-control': 'public, max-age=300' });
+        } else if (path === '/api/share/v1' && request.method === 'POST') res = await api(request, ctx);
         else if ((r = m(/^\/api\/share\/v1\/sessions\/([^/]+)\/files\/([^/]+)$/)) && request.method === 'GET') res = await accountDownload(request, ctx, r[1], r[2]);
+        else if ((r = m(/^\/api\/share\/v1\/sessions\/([^/]+)\/zip$/)) && request.method === 'GET') res = await accountDownload(request, ctx, r[1], 'zip');
+        else if ((r = m(/^\/api\/share\/v1\/sessions\/([^/]+)\/preview$/)) && request.method === 'GET') res = await accountPreview(request, r[1]);
         else res = fail('Not found', 404);
         for (const [k, v] of Object.entries(h)) res.headers.set(k, v);
         return res;
       }
-      if (path === '/share' || path === '/share/') {
-        return new Response(senderPage(env), { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store',
-          'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer' } });
-      }
+      if (path === '/share' || path.startsWith('/share/')) return await appShell(request, path);
       if ((r = m(/^\/s\/([A-Za-z0-9]{1,16})\/?$/)) && request.method === 'GET') {
         if (await rateLimited(request, 'view')) return new Response('Too many requests', { status: 429 });
         return await receiverView(request, r[1].toUpperCase());
@@ -444,6 +627,11 @@ export function createApp({ db, env, now = () => Date.now() }) {
       }
       if ((r = m(/^\/s\/([A-Z0-9]{1,16})\/decline$/)) && request.method === 'POST') return await browserDecline(r[1]);
       if ((r = m(/^\/s\/([A-Z0-9]{1,16})\/f\/([^/]+)$/)) && request.method === 'GET') return await browserDownload(request, ctx, r[1], r[2]);
+      if ((r = m(/^\/s\/([A-Z0-9]{1,16})\/zip$/)) && request.method === 'GET') return await browserDownload(request, ctx, r[1], 'zip');
+      if ((r = m(/^\/s\/([A-Z0-9]{1,16})\/preview$/)) && request.method === 'GET') {
+        const session = CODE_RE.test(r[1]) ? await sessionByCode(r[1]) : null;
+        return session && session.mode === 'qr' ? await servePreview(session) : fail('Not found', 404);
+      }
       return fail('Not found', 404);
     } catch (e) {
       if (e instanceof ValidationError) return fail(e.message, e.status, path.startsWith('/api/') ? cors(request) : {});

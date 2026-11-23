@@ -3,6 +3,12 @@ main = "src/index.js"
 compatibility_date = "2026-11-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Installable web app (served under /share/). The Worker runs first so it can add security headers.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
 # Expiry + storage cleanup every 15 minutes.
 [triggers]
 crons = ["*/15 * * * *"]
@@ -20,7 +26,7 @@ BUCKET = "trysa-share-private"
 [[ratelimits]]
 name = "SHARE_RL"
 namespace_id = "7201"
-simple = { limit = 30, period = 60 }
+simple = { limit = 120, period = 60 }
 
 # IMPORTANT: routes are scoped to /s/*, /share* and /api/share/* only, so existing
 # permanent QR paths such as link.trysa.app/hicc-gallery never reach this Worker.
@@ -38,4 +44,17 @@ vars = { SUPABASE_URL = "https://ccaxvjrgjpaixvyrgizn.supabase.co", SUPABASE_PUB
 [[env.staging.ratelimits]]
 name = "SHARE_RL"
 namespace_id = "7202"
-simple = { limit = 30, period = 60 }
+simple = { limit = 120, period = 60 }
+
+# TRYSA Nearby: one Durable Object per local network (presence + WebRTC signalling only).
+[[durable_objects.bindings]]
+name = "NEARBY"
+class_name = "NearbyRoom"
+
+[[migrations]]
+tag = "v1-nearby"
+new_sqlite_classes = ["NearbyRoom"]
+
+[[env.staging.durable_objects.bindings]]
+name = "NEARBY"
+class_name = "NearbyRoom"

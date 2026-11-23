@@ -1,70 +1,95 @@
 # TRYSA Share
 
-Phase 1 of the TRYSA Share PRD: **Universal QR Send + browser receiving**, plus **Remote Send** between TRYSA accounts, all handled by one Cloudflare Worker on `link.trysa.app`.
+Share photos, videos and files with anyone nearby or anywhere. Receivers don't need an account. Everything runs on one Cloudflare Worker for `link.trysa.app`:
 
-> **Status: built and tested locally, not deployed.** The Supabase migration is *proposed* and has not been applied. No Worker routes are live. `link.trysa.app/hicc-gallery` and other permanent QR codes are untouched.
-
-| Receiver preview (before accept) | After accept |
+| Path | What it is |
 |---|---|
-| <img src="docs/screenshots/recv-preview-light.png" width="260"> | <img src="docs/screenshots/recv-accepted-dark.png" width="260"> |
+| `/share/` | The TRYSA Share app: an installable web app with a share sheet, Nearby, QR, Contacts, Inbox and Sent |
+| `/s/:code` | Public receiver page for QR codes and links (no app, no account) |
+| `/api/share/v1` | Transfer API, plus the Nearby WebSocket |
 
-## Why a Worker instead of a Supabase Edge Function
-The Remote Send v1 Edge Function couldn't be deployed because the project has reached its Edge Function limit. The PRD already places the edge gateway on Cloudflare Workers (§8), so the whole transfer API runs there instead. It talks to the existing Supabase tables and private bucket using the service-role key, which is stored only as a Worker secret. This needs **no new Supabase function slot**.
+> **Status: built and tested locally, not deployed.** Two Supabase migrations are *proposed* and have **not** been applied. No Worker routes are live. `link.trysa.app/hicc-gallery` and other permanent QR codes are untouched.
 
-## What's here
+## Screens
+| Nearby | Share sheet | Person card | Incoming request |
+|---|---|---|---|
+| <img src="docs/screenshots/03-home-nearby.png" width="200"> | <img src="docs/screenshots/04-share-sheet.png" width="200"> | <img src="docs/screenshots/05-person-card-waiting.png" width="200"> | <img src="docs/screenshots/06-incoming-alert.png" width="200"> |
+| **Delivered** | **Received** | **QR Send** | **Browser receiver** |
+| <img src="docs/screenshots/08-person-card-delivered.png" width="200"> | <img src="docs/screenshots/07-received.png" width="200"> | <img src="docs/screenshots/10-qr-card.png" width="200"> | <img src="docs/screenshots/11-browser-receiver-alert.png" width="200"> |
+| **Contacts** | **Remote request (dark)** | **Received (dark)** | **Browser files** |
+| <img src="docs/screenshots/14-contacts.png" width="200"> | <img src="docs/screenshots/16-remote-alert-dark.png" width="200"> | <img src="docs/screenshots/17-remote-received-dark.png" width="200"> | <img src="docs/screenshots/12-browser-receiver-files.png" width="200"> |
+
+These screenshots come from the automated end-to-end run (`npm run e2e`). They use test accounts and generated images.
+
+## Features
+- **Share sheet.** It works like a phone's built-in share sheet:
+  - pick files to get "3 Photos Selected", an Options pill and a scrolling preview of the selection;
+  - below that, a row of nearby people, then Nearby, QR Code, Contacts and Copy Link;
+  - on Android and desktop, installing the app adds TRYSA Share to the system share sheet.
+- **Nearby (phone to phone).**
+  - **Discovery:** you only see people on the same network who switched Receiving on, for at most 10 minutes. You can limit it to Contacts Only.
+  - **Transfer:** the files go **directly between the two devices** over an encrypted WebRTC data channel.
+  - **Delivered:** the sender's card shows Connecting → Waiting → Sending % → Delivered. Delivered appears only after the receiver confirms every file arrived complete.
+  - **Fallback:** if a direct connection fails, one tap sends through the TRYSA cloud instead.
+- **Incoming request.** A "Samson would like to share 3 photos." alert, with an optional preview, Decline and Accept. Nothing transfers before Accept.
+- **QR Send.** A card with the QR code and live status: Waiting for scan → Opened → Accepted → Delivered.
+  - The receiver's browser shows the same alert design. They can save files one by one, as a single **"Download all (.zip)"**, or with "Save to Photos" where the browser supports it.
+- **Contacts.** You can search people in your workspaces and people you've shared with before. Anyone else can only be found by their exact @username, so there's no open directory of users.
+  - Each recipient gets an in-app alert, plus a **push notification** when they've turned notifications on and the app is closed.
+- **Resumable uploads.** Files over 6 MB upload in chunks and resume after a dropped connection. If resumable upload isn't available, the app falls back to a single upload.
+- **Safety checks when the sender finishes uploading:**
+  - apps and programs (`.exe`, Linux and Mac executables) are blocked;
+  - photos, videos and PDFs whose content doesn't match their type are rejected;
+  - an optional malware-scanner hook (`SCANNER_URL`) can be added. **The built-in checks are not antivirus.**
+- **Previews.** A small preview image, with photo metadata (including location) removed, made on the sender's phone. It's shown before Accept only if the sender allows it.
+  - Always on for Contacts and Nearby.
+  - Off by default for QR codes and links (switch it on in Options).
+
+## How it fits together
 ```
-worker/                      Cloudflare Worker (no runtime dependencies)
-  src/core.js                validation, codes, PIN hashing, PRD §9 state machines (pure)
-  src/app.js                 sender API, browser receiver, streamed downloads, cleanup cron
-  src/db.js                  minimal Supabase REST/Storage/Auth client
-  src/pages/receiver.js      /s/:code — no-install, no-account receiver page
-  src/pages/sender.js        /share — staging sender console (QR / TRYSA user / Inbox / History)
-  test/                      27 tests incl. PRD §11 acceptance tests 1,2,5,6,7,8 at API level
-supabase/migrations/         proposed v2 schema change (not applied)
-docs/DEPLOY.md               step-by-step staging → production runbook
+phone app (/share)  ──HTTPS──▶  Worker  ──service role──▶  Supabase (tables, private bucket)
+      │  ▲                        │
+      │  └── WebSocket ──▶ NearbyRoom Durable Object (one per network; presence + connection setup only)
+      └──────── direct WebRTC data channel (files) ────────▶ other phone
+browser receiver (/s/:code) ──▶ Worker streams files from the private bucket (no file links handed out)
 ```
 
-## How it works
-**QR Send:** the sender picks files and taps *Generate QR*. The Worker creates an `uploading` session and returns signed upload URLs. The phone uploads straight to the private bucket. Then `publish` checks each stored object's size (and its SHA-256 when supplied) before the session becomes `ready`, so **the QR only works once the files are ready**.
+## Repository
+```
+worker/
+  src/app.js            API, receiver, streamed downloads + ZIP, contacts, push, Nearby auth, app shell headers
+  src/nearby.js         NearbyHub (rules) + NearbyRoom Durable Object
+  src/zip.js            streaming ZIP writer with exact Content-Length
+  src/sniff.js          content checks + optional scanner hook
+  src/push.js           Web Push (VAPID), empty pushes only
+  src/core.js, db.js    validation, state machines, Supabase REST client
+  public/share/         the app: index.html, app.css, app.js, nearby-client.js, sw.js, manifest, icons, vendor/
+  test/                 51 unit/API tests (node --test)
+  e2e/                  real workerd + mock Supabase + Playwright (two phones + a browser)
+supabase/migrations/    v2 (QR/browser receivers) and v3 (previews, push, resumable uploads), both proposed
+docs/DEPLOY.md          staging → production runbook
+```
 
-**Browser receiver:** scanning the QR opens `link.trysa.app/s/CODE`. Before accepting, the page shows the sender's name, file count, kinds (e.g. "11 photos, 1 video"), total size and time left. **File names stay hidden until the receiver accepts.** Tapping Accept claims a receiver slot through an atomic RPC and sets an HttpOnly, path-scoped claim cookie.
-
-**Downloads stream through the Worker.** No signed file URL ever reaches a receiver, so:
-- revoking takes effect immediately, and the files are deleted;
-- "downloaded" is recorded by the **server** when every byte of every file has been delivered, not reported by the client;
-- Range requests let interrupted downloads resume, and repeats never create duplicate receipts.
-
-**Remote Send** keeps the v1 flow (sender → recipient account → Inbox → Accept → download) on the same API. It also writes a `connect_notifications` row when the sender shares from a workspace.
-
-**Safety defaults (PRD §10):**
-- QR links expire after 30 minutes by default, for 1 receiver.
-- The sender can allow up to 20 receivers for one-to-many sharing.
-- Optional 4–8 digit PIN, locked after 5 wrong attempts.
-- 10-character codes avoid look-alike characters (0/O, 1/I/L).
-- Per-IP rate limits.
-- Scan events store a hashed visitor key, never the IP address.
-- Strict CSP on the receiver page.
-- A cron job every 15 minutes deletes expired, revoked and failed transfers.
+## Run it
+```
+cd worker && npm install
+npm test          # 51 tests
+npm run e2e       # 11 end-to-end checks, real WebRTC between two emulated phones
+```
 
 ## Fixes over the Remote Send v1 starter
-- `create` would always have failed: it inserted `workspace_id = null`, but that column is `NOT NULL`. The migration makes it nullable, and the API checks workspace membership when an ID is supplied.
-- Browser receivers were impossible because `receiver_user_id` was `NOT NULL`. Browser receipts now use a hashed claim token.
-- 60-second signed links stayed valid after revoke. They're replaced by streaming through the Worker.
-- `downloaded` was client-reported. It's now confirmed by the server.
-- `publish` only checked that an object existed. It now checks the object's size and its hash when one is supplied.
-- Added the full PRD §9 status set and idempotent events.
+- `create` always failed, because it inserted `workspace_id = null` into a `NOT NULL` column.
+- Browser receivers were impossible.
+- Signed links stayed valid after revoke.
+- "Downloaded" was reported by the client.
+- `publish` only checked that a file existed.
 
-## Run tests
-```
-cd worker && npm install && npm test
-```
+## What this does *not* do (yet)
+- **No native iOS/Android apps or iOS share extension.** This is an installable web app. On iPhone it can't appear in the system share sheet, and notifications need it added to the Home Screen (iOS 16.4+).
+- **No Bluetooth/AirDrop-style discovery.** Browsers can't scan Bluetooth or Wi-Fi Direct, so Nearby means "same network". Phones on different networks, or networks that block direct device-to-device connections, use the cloud fallback.
+- **No system-level incoming pop-up when the app is closed.** A push notification opens the app's Accept/Decline alert. No pop-up appears without the user's permission.
+- **No end-to-end encryption for cloud transfers.** They use TLS plus a private bucket; we don't claim more. Nearby transfers are encrypted between the two devices (DTLS).
+- **Phone memory limits.** Very large Nearby transfers are held in the receiving browser until saved.
+- Malware scanning needs an external scanner service.
 
-## Not yet built (later phases)
-- Native iOS/Android app screens, share-sheet extension and push delivery (Phase 2).
-- Nearby discovery and direct local transfer (Phases 2–3).
-- ZIP packaging for multi-file downloads.
-- Malware scanning.
-- Resumable *uploads* (TUS).
-- Contact picker for Remote Send (the staging UI asks for a user ID).
-
-The OpenDrop archive (GPLv3, experimental AirDrop for macOS/Linux) was reviewed per PRD §13. **None of its code is used here.**
+The OpenDrop archive (GPLv3) was reviewed. **None of its code is used.**

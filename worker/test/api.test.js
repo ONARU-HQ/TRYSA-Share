@@ -58,7 +58,7 @@ test('#1/#2 QR send → browser receiver: preview, accept without signup, downlo
   const view = await t.call(`/s/${share.short_code}`);
   assert.equal(view.status, 200);
   const html = await view.text();
-  assert.ok(html.includes('Samson') && html.includes('"count":3') && html.includes('3 photos'));
+  assert.ok(html.includes('Samson') && html.includes('"count":3') && html.includes('3 photos') && html.includes('would like to share'));
   assert.ok(!html.includes('IMG_0001.jpg'), 'file names are hidden before acceptance');
   assert.match(view.headers.get('content-security-policy'), /frame-ancestors 'none'/);
 

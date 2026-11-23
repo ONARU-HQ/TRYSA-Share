@@ -61,6 +61,18 @@ export function createDb(env, fetchImpl = fetch) {
       });
       return json(res, `update ${table}`);
     },
+    async upsert(table, rows, onConflict) {
+      const res = await fetchImpl(`${base}/rest/v1/${table}?on_conflict=${onConflict}`, {
+        method: 'POST',
+        headers: { ...svc, 'content-type': 'application/json', prefer: 'return=representation,resolution=merge-duplicates' },
+        body: JSON.stringify(rows),
+      });
+      return json(res, `upsert ${table}`);
+    },
+    async delete(table, filters) {
+      const res = await fetchImpl(`${base}/rest/v1/${table}?${qs(filters)}`, { method: 'DELETE', headers: { ...svc, prefer: 'return=representation' } });
+      return json(res, `delete ${table}`);
+    },
     async rpc(fn, args) {
       const res = await fetchImpl(`${base}/rest/v1/rpc/${fn}`, {
         method: 'POST', headers: { ...svc, 'content-type': 'application/json' }, body: JSON.stringify(args),

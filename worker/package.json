@@ -8,9 +8,15 @@
     "test": "node --test test/*.test.js",
     "dev": "wrangler dev",
     "deploy:staging": "wrangler deploy --env staging",
-    "check": "wrangler deploy --dry-run --outdir dist"
+    "check": "wrangler deploy --dry-run --outdir dist",
+    "vendor": "node scripts/vendor.mjs",
+    "e2e": "node e2e/run.mjs",
+    "vapid-keys": "node scripts/vapid-keys.mjs"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "qrcode-generator": "^1.4.4",
+    "tus-js-client": "^4.3.1",
     "wrangler": "4.167.0"
   }
 }
