@@ -271,6 +271,7 @@ function putUpload(url, file, onProgress) {
   return new Promise((resolve, reject) => {
     const x = new XMLHttpRequest(); x.open('PUT', url);
     x.setRequestHeader('content-type', file.type || 'application/octet-stream');
+    if (url.startsWith(config.supabase_url)) x.setRequestHeader('apikey', config.publishable_key);
     x.upload.onprogress = (e) => onProgress(e.loaded);
     x.onload = () => (x.status < 300 ? resolve() : reject(new Error(`Upload failed (${x.status})`)));
     x.onerror = () => reject(new Error('Connection lost'));
@@ -282,7 +283,7 @@ async function tusUpload(resumable, objectPath, file, onProgress) {
   return new Promise((resolve, reject) => {
     const up = new tus.Upload(file, {
       endpoint: resumable.endpoint, chunkSize: TUS_CHUNK, retryDelays: [0, 1000, 3000, 5000, 10000, 20000, 30000],
-      headers: { authorization: `Bearer ${t}`, 'x-upsert': 'false' },
+      headers: { authorization: `Bearer ${t}`, apikey: config.publishable_key, 'x-upsert': 'false' },
       uploadDataDuringCreation: true, removeFingerprintOnSuccess: true,
       metadata: { bucketName: resumable.bucket, objectName: objectPath, contentType: file.type || 'application/octet-stream', cacheControl: '3600' },
       onProgress: (sent) => onProgress(sent), onSuccess: resolve, onError: reject,

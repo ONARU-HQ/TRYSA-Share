@@ -16,7 +16,7 @@ crons = ["*/15 * * * *"]
 [vars]
 SUPABASE_URL = "https://ccaxvjrgjpaixvyrgizn.supabase.co"
 # Public publishable (anon) key – safe for browsers. Set before deploying.
-SUPABASE_PUBLISHABLE_KEY = "REPLACE_WITH_PUBLISHABLE_KEY"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IkJo_XT6St7PWGeMryVJNw_pXbP2w3W"
 PUBLIC_BASE_URL = "https://link.trysa.app"
 ALLOWED_ORIGINS = "https://link.trysa.app,https://trysa.app,https://app.trysa.app"
 BUCKET = "trysa-share-private"
@@ -39,7 +39,8 @@ simple = { limit = 120, period = 60 }
 
 [env.staging]
 name = "trysa-share-staging"
-vars = { SUPABASE_URL = "https://ccaxvjrgjpaixvyrgizn.supabase.co", SUPABASE_PUBLISHABLE_KEY = "REPLACE_WITH_PUBLISHABLE_KEY", PUBLIC_BASE_URL = "https://trysa-share-staging.workers.dev", ALLOWED_ORIGINS = "https://trysa-share-staging.workers.dev", BUCKET = "trysa-share-private" }
+# PUBLIC_BASE_URL / ALLOWED_ORIGINS default to the workers.dev address the Worker is served from.
+vars = { SUPABASE_URL = "https://ccaxvjrgjpaixvyrgizn.supabase.co", SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IkJo_XT6St7PWGeMryVJNw_pXbP2w3W", BUCKET = "trysa-share-private" }
 
 [[env.staging.ratelimits]]
 name = "SHARE_RL"
