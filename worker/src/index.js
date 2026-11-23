@@ -1,6 +1,7 @@
 // Cloudflare Worker entry for link.trysa.app (routes: /s/*, /share*, /api/share/*).
 import { createApp } from './app.js';
 import { createDb } from './db.js';
+export { NearbyRoom } from './nearby.js';
 
 const appFor = (env) => createApp({ db: createDb(env), env });
 
