@@ -11,7 +11,9 @@ export function createDb(env, fetchImpl = fetch) {
   const base = env.SUPABASE_URL.replace(/\/$/, '');
   const key = env.SUPABASE_SERVICE_ROLE_KEY;
   const bucket = env.BUCKET || 'trysa-share-private';
-  const svc = { apikey: key, authorization: `Bearer ${key}` };
+  // New-format secret keys (sb_secret_…) are sent only as `apikey`; the Supabase gateway
+  // turns them into a short-lived service-role JWT. Legacy JWT service keys also need Bearer.
+  const svc = key && key.startsWith('sb_secret_') ? { apikey: key } : { apikey: key, authorization: `Bearer ${key}` };
 
   async function json(res, what) {
     const text = await res.text();

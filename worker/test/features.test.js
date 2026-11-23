@@ -185,3 +185,14 @@ test('remote send wakes the recipient devices; gone subscriptions are removed', 
   assert.deepEqual(t.db.tables.trysa_share_push_subscriptions.map((s) => s.id), ['s1']);
   assert.equal(await notifyUser(t.db, {}, ADA.id), 0, 'no keys configured → no-op');
 });
+
+test('new-format sb_secret_ keys are sent as apikey only (never as a Bearer token)', async () => {
+  const { createDb } = await import('../src/db.js');
+  const seen = [];
+  const fake = async (url, init) => { seen.push(init.headers); return new Response('[]', { status: 200 }); };
+  await createDb({ SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_abc' }, fake).select('t', {});
+  assert.equal(seen[0].apikey, 'sb_secret_abc');
+  assert.equal(seen[0].authorization, undefined);
+  await createDb({ SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'eyJlegacy' }, fake).select('t', {});
+  assert.equal(seen[1].authorization, 'Bearer eyJlegacy');
+});
