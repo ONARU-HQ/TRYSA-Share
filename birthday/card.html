@@ -1,0 +1,60 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  :root { --ink:#0b0b10; --accent:#0a6cff; --accent-2:#3b8cff; --ok:#30c85e; --warn:#ff9f0a; --pink:#ff4f8b; }
+  * { margin:0; box-sizing:border-box; }
+  html,body { width:1080px; height:1350px; background:var(--ink); overflow:hidden; }
+  .card { position:relative; width:1080px; height:1350px; overflow:hidden;
+    background:
+      radial-gradient(900px 700px at 50% 38%, rgba(10,108,255,.55), transparent 70%),
+      radial-gradient(600px 500px at 85% 95%, rgba(255,79,139,.22), transparent 70%),
+      radial-gradient(600px 500px at 10% 90%, rgba(48,200,94,.14), transparent 70%),
+      var(--ink);
+    font-family:"Inter Display","Inter",sans-serif; color:#fff; }
+  #confetti { position:absolute; inset:0; }
+  .content { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; text-align:center; padding:150px 90px 110px; }
+  .eyebrow { font-weight:600; font-size:30px; letter-spacing:.32em; text-transform:uppercase; color:rgba(255,255,255,.75); }
+  .cake { font-size:150px; line-height:1; margin:70px 0 40px; filter:drop-shadow(0 20px 40px rgba(0,0,0,.45)); }
+  h1 { font-weight:900; font-size:168px; line-height:.92; letter-spacing:-.04em; }
+  h1 span { display:block; background:linear-gradient(90deg,#8fc0ff,#fff 45%,#ffc2d8); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .to { margin-top:56px; font-weight:500; font-size:46px; line-height:1.25; color:rgba(255,255,255,.92); }
+  .to b { font-weight:800; }
+  .msg { margin-top:34px; max-width:780px; font-weight:400; font-size:31px; line-height:1.5; color:rgba(255,255,255,.7); }
+  .foot { margin-top:auto; display:flex; flex-direction:column; align-items:center; gap:18px; }
+  .rule { width:120px; height:4px; border-radius:2px; background:var(--accent-2); }
+  .sig { font-weight:700; font-size:34px; }
+  .date { font-weight:500; font-size:24px; letter-spacing:.2em; color:rgba(255,255,255,.55); }
+</style></head>
+<body><div class="card">
+  <svg id="confetti" viewBox="0 0 1080 1350"></svg>
+  <div class="content">
+    <div class="eyebrow">Today we celebrate</div>
+    <div class="cake">🎂</div>
+    <h1>Happy<span>Birthday</span></h1>
+    <div class="to">To <b>our Founder</b>,<br>the one who started it all.</div>
+    <div class="msg">Thank you for the vision, the late nights, and for building a home for all of us. Here's to another year of big dreams.</div>
+    <div class="foot">
+      <div class="rule"></div>
+      <div class="sig">With love, the TRYSA community</div>
+      <div class="date">23 · 11 · 2026</div>
+    </div>
+  </div>
+</div>
+<script>
+  // Deterministic confetti, kept to the edges so it never sits behind the text.
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const cols = ['#0a6cff','#3b8cff','#30c85e','#ff9f0a','#ff4f8b','#ffffff'];
+  const svg = document.getElementById('confetti'); let out = '';
+  for (let i = 0; i < 140; i++) {
+    const x = r()*1080, y = r()*1350;
+    const cx = Math.abs(x-540), inCenter = cx < 400 && y > 120 && y < 1240;
+    if (inCenter) continue;
+    const c = cols[Math.floor(r()*cols.length)], rot = r()*360, k = r();
+    const o = (0.55 + r()*0.45).toFixed(2);
+    if (k < .45) out += `<rect x="${x}" y="${y}" width="${10+r()*14}" height="${5+r()*6}" rx="2" fill="${c}" opacity="${o}" transform="rotate(${rot} ${x} ${y})"/>`;
+    else if (k < .8) out += `<circle cx="${x}" cy="${y}" r="${3+r()*7}" fill="${c}" opacity="${o}"/>`;
+    else out += `<path d="M${x} ${y} q 10 -14 20 0 t 20 0" stroke="${c}" stroke-width="4" fill="none" stroke-linecap="round" opacity="${o}" transform="rotate(${rot} ${x} ${y})"/>`;
+  }
+  svg.innerHTML = out;
+</script>
+</body></html>
