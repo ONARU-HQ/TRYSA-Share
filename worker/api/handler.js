@@ -14,6 +14,7 @@ function envFor(origin) {
     PUBLIC_BASE_URL: e.PUBLIC_BASE_URL || origin,
     ALLOWED_ORIGINS: [e.ALLOWED_ORIGINS, origin].filter(Boolean).join(','),
     VAPID_PUBLIC_KEY: e.VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY: e.VAPID_PRIVATE_KEY, VAPID_SUBJECT: e.VAPID_SUBJECT,
+    RESEND_API_KEY: e.RESEND_API_KEY, LOGIN_EMAIL_FROM: e.LOGIN_EMAIL_FROM,
     SCANNER_URL: e.SCANNER_URL, SCANNER_TOKEN: e.SCANNER_TOKEN, SCANNER_REQUIRED: e.SCANNER_REQUIRED,
   };
 }
@@ -34,6 +35,11 @@ async function handle(request) {
   const req = originalRequest(request);
   const origin = new URL(req.url).origin;
   const env = envFor(origin);
+  const path = new URL(req.url).pathname;
+  if (path === '/api/share/v1/config') {
+    return Response.json({ supabase_url: env.SUPABASE_URL, publishable_key: env.SUPABASE_PUBLISHABLE_KEY, push_public_key: env.VAPID_PUBLIC_KEY || null,
+      server_ready: !!env.SUPABASE_SERVICE_ROLE_KEY }, { headers: { 'cache-control': 'no-store' } });
+  }
   if (!env.SUPABASE_SERVICE_ROLE_KEY) return Response.json({ error: 'TRYSA Share is not configured' }, { status: 503 });
   const app = createApp({ db: createDb(env), env });
   if (new URL(req.url).pathname === '/api/cron/cleanup') {

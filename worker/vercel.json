@@ -3,30 +3,76 @@
   "framework": null,
   "buildCommand": "",
   "outputDirectory": "public",
-  "cleanUrls": false,
-  "trailingSlash": false,
   "redirects": [
-    { "source": "/", "destination": "/share/", "permanent": false },
-    { "source": "/share", "destination": "/share/", "permanent": false }
+    {
+      "source": "/",
+      "destination": "/share/",
+      "permanent": false
+    },
+    {
+      "source": "/share",
+      "destination": "/share/",
+      "permanent": false
+    }
   ],
   "rewrites": [
-    { "source": "/share/", "destination": "/share/index.html" },
-    { "source": "/share/receive-share", "destination": "/api/handler?__p=/share/receive-share" },
-    { "source": "/s/:path*", "destination": "/api/handler?__p=/s/:path*" },
-    { "source": "/api/share/:path*", "destination": "/api/handler?__p=/api/share/:path*" },
-    { "source": "/api/cron/cleanup", "destination": "/api/handler?__p=/api/cron/cleanup" }
+    {
+      "source": "/share/",
+      "destination": "/share/index.html"
+    },
+    {
+      "source": "/share/receive-share",
+      "destination": "/api/handler?__p=/share/receive-share"
+    },
+    {
+      "source": "/s/:path*",
+      "destination": "/api/handler?__p=/s/:path*"
+    },
+    {
+      "source": "/api/share/:path*",
+      "destination": "/api/handler?__p=/api/share/:path*"
+    },
+    {
+      "source": "/api/cron/cleanup",
+      "destination": "/api/handler?__p=/api/cron/cleanup"
+    }
   ],
   "headers": [
     {
       "source": "/share/(.*)",
       "headers": [
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://ccaxvjrgjpaixvyrgizn.supabase.co; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "no-referrer" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://ccaxvjrgjpaixvyrgizn.supabase.co; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
       ]
     },
-    { "source": "/share/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    {
+      "source": "/share/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
   ],
-  "crons": [{ "path": "/api/cron/cleanup", "schedule": "0 3 * * *" }]
+  "crons": [
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }
