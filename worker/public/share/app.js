@@ -104,6 +104,22 @@ async function route(session) {
 }
 route((await sb.auth.getSession()).data.session);
 
+// Sign-in link from our Resend email: exchange the one-time token hash for a session.
+{
+  const q = new URLSearchParams(location.search);
+  if (q.get('token_hash')) {
+    const { error } = await sb.auth.verifyOtp({ token_hash: q.get('token_hash'), type: q.get('type') || 'magiclink' });
+    history.replaceState(null, '', '/share/');
+    if (error) setTimeout(() => { $('loginMsg').textContent = 'That sign-in link has expired or was already used. Request a new one.'; }, 0);
+  }
+}
+const oauth = (provider) => async () => {
+  $('loginMsg').textContent = '';
+  const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: `${location.origin}/share/` } });
+  if (error) $('loginMsg').textContent = error.message;
+};
+$('googleLogin').onclick = oauth('google');
+$('appleLogin').onclick = oauth('apple');
 const friendlyAuthError = (e) => /hook/i.test(e.message)
   ? 'Email sign-in links are unavailable right now. Please sign in with your TRYSA password.'
   : /invalid login/i.test(e.message) ? 'Email or password is incorrect.' : e.message;
@@ -114,9 +130,13 @@ $('passwordLogin').onclick = async () => {
 };
 $('password').onkeydown = (e) => { if (e.key === 'Enter') $('passwordLogin').click(); };
 $('login').onclick = async () => {
-  const email = $('email').value.trim();
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + '/share/' } });
-  $('loginMsg').textContent = error ? friendlyAuthError(error) : 'Check your email for the sign-in link.';
+  $('login').disabled = true; $('loginMsg').textContent = 'Sending…';
+  try {
+    const r = await fetch(`${API}/email-link`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: $('email').value.trim() }) });
+    const j = await r.json().catch(() => ({}));
+    $('loginMsg').textContent = r.ok ? 'Check your email for a sign-in link from TRYSA Share.' : (j.error || 'Could not send the email.');
+  } catch { $('loginMsg').textContent = 'No connection. Try again.'; }
+  $('login').disabled = false;
 };
 $('meBtn').onclick = async () => { if (confirm(`Signed in as ${state.me?.name || ''}. Sign out?`)) { await sb.auth.signOut(); location.reload(); } };
 

@@ -11,6 +11,7 @@ function matches(row, key, cond) {
     case 'neq': return String(val) !== arg;
     case 'is': return arg === 'null' ? val == null : String(val) === arg;
     case 'lt': return val < arg;
+    case 'gt': return val > arg;
     case 'ilike': return val != null && new RegExp('^' + arg.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$', 'i').test(String(val));
     case 'in': return arg.slice(1, -1).split(',').includes(String(val));
     default: throw new Error(`unsupported op ${op}`);
@@ -38,13 +39,14 @@ function filter(rows, filters) {
 
 export function createFakeDb({ users = {}, now = () => Date.now() } = {}) {
   const t = { trysa_share_sessions: [], trysa_share_files: [], trysa_share_receipts: [], trysa_share_events: [],
-    profiles: [], workspace_members: [], connect_notifications: [], trysa_share_push_subscriptions: [] };
+    profiles: [], workspace_members: [], connect_notifications: [], trysa_share_push_subscriptions: [], trysa_share_login_requests: [] };
   const objects = new Map();
   const ts = () => new Date(now()).toISOString();
   const defaults = {
     trysa_share_sessions: () => ({ id: crypto.randomUUID(), pin_failures: 0, cleaned_at: null, created_at: ts(), updated_at: ts() }),
     trysa_share_files: () => ({ created_at: ts(), upload_status: 'pending' }),
     trysa_share_receipts: () => ({ id: crypto.randomUUID(), created_at: ts(), download_count: 0, receiver_user_id: null, claim_token_hash: null }),
+    trysa_share_login_requests: () => ({ id: crypto.randomUUID(), created_at: ts() }),
     trysa_share_events: () => ({ id: crypto.randomUUID(), occurred_at: ts(), metadata: {} }),
   };
   const db = {
@@ -107,6 +109,8 @@ export function createFakeDb({ users = {}, now = () => Date.now() } = {}) {
       }
       throw new Error(`unknown rpc ${fn}`);
     },
+    magicLinks: [],
+    async generateMagicLinkHash(email) { db.magicLinks.push(email); return `hash-${email}`; },
     async signUpload(path) { return `https://fake.supabase.co/storage/v1/object/upload/sign/trysa-share-private/${path}?token=x`; },
     async objectSize(path) { return objects.has(path) ? objects.get(path).byteLength : null; },
     async getObject(path, range) {

@@ -10,6 +10,7 @@ import { zipStream } from './zip.js';
 import { checkContent, scanWithService } from './sniff.js';
 import { notifyUser, isAllowedEndpoint } from './push.js';
 import { roomKey } from './nearby.js';
+import { requestEmailLink } from './email-login.js';
 import { receiverPage } from './pages/receiver.js';
 
 const MAX_PIN_FAILURES = 5;
@@ -605,7 +606,11 @@ export function createApp({ db, env, now = () => Date.now() }) {
         if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: h });
         if (await rateLimited(request, 'api')) return fail('Too many requests', 429, h);
         let res;
-        if (path === '/api/share/v1/config' && request.method === 'GET') {
+        if (path === '/api/share/v1/email-link' && request.method === 'POST') {
+          const body = await request.json().catch(() => ({}));
+          const r = await requestEmailLink({ db, env, email: body?.email, base, ip: request.headers.get('cf-connecting-ip') || request.headers.get('x-real-ip') || (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() });
+          res = json(r.body, r.status);
+        } else if (path === '/api/share/v1/config' && request.method === 'GET') {
           res = json({ supabase_url: env.SUPABASE_URL, publishable_key: env.SUPABASE_PUBLISHABLE_KEY, push_public_key: env.VAPID_PUBLIC_KEY || null },
             200, { 'cache-control': 'public, max-age=300' });
         } else if (path === '/api/share/v1' && request.method === 'POST') res = await api(request, ctx);

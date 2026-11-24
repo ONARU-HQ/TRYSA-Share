@@ -75,6 +75,16 @@ export function createDb(env, fetchImpl = fetch) {
       const res = await fetchImpl(`${base}/rest/v1/${table}?${qs(filters)}`, { method: 'DELETE', headers: { ...svc, prefer: 'return=representation' } });
       return json(res, `delete ${table}`);
     },
+    /** One-time magic-link token hash for an existing user. Sends no email (so no auth email hook runs). */
+    async generateMagicLinkHash(email) {
+      const res = await fetchImpl(`${base}/auth/v1/admin/generate_link`, {
+        method: 'POST', headers: { ...svc, 'content-type': 'application/json' },
+        body: JSON.stringify({ type: 'magiclink', email }),
+      });
+      if (!res.ok) { console.error('generate_link failed', res.status); return null; }
+      const body = await res.json();
+      return body?.properties?.hashed_token || body?.hashed_token || null;
+    },
     async rpc(fn, args) {
       const res = await fetchImpl(`${base}/rest/v1/rpc/${fn}`, {
         method: 'POST', headers: { ...svc, 'content-type': 'application/json' }, body: JSON.stringify(args),
