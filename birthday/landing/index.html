@@ -173,8 +173,8 @@ h2 em { font-weight: 600; }
         <div class="meta"><span class="label">The TRYSA community</span><span class="date">Monday, 24 November 2026</span></div>
       </div>
       <h1><span class="l1 foil">Happy</span><span class="l2 foil">Birthday</span></h1>
-      <div class="to"><span>to <span id="founder-name">our Founder</span></span></div>
-      <p class="lede">Today we celebrate the person who started TRYSA. Thank you for the vision, the late nights, and for building a home for all of us.</p>
+      <div class="to"><span>to <span id="founder-name">Yomi Onalaru</span></span></div>
+      <p class="lede">Today we celebrate our founder, the person who started TRYSA. Yomi, thank you for the vision, the late nights, and for building a home for all of us.</p>
       <div class="actions">
         <a class="btn btn-gold" href="#wall">Leave a wish</a>
         <button class="btn btn-line" id="save-card" type="button">Save the card</button>
@@ -184,7 +184,7 @@ h2 em { font-weight: 600; }
     <div class="stage" id="stage">
       <div class="halo" aria-hidden="true"></div>
       <div class="card3d" id="card3d">
-        <img src="card.png" alt="Black and gold birthday card: Happy Birthday to our Founder, the one who started it all. With love, the TRYSA community, 24 November 2026." width="1080" height="1350">
+        <img src="card.png" alt="Black and gold birthday card with Yomi Onalaru's portrait in a gold arch: Happy Birthday Yomi Onalaru, our founder, the one who started it all. With love, the TRYSA community, 24 November 2026." width="1080" height="1350">
         <div class="glare" aria-hidden="true"></div>
       </div>
       <span class="tag label">From all of us</span>
@@ -207,7 +207,7 @@ h2 em { font-weight: 600; }
 
     <form class="composer" id="composer" hidden>
       <label for="wish-text" id="composer-label">Write your wish</label>
-      <textarea id="wish-text" maxlength="400" placeholder="Happy birthday! Thank you for…"></textarea>
+      <textarea id="wish-text" maxlength="400" placeholder="Happy birthday, Yomi! Thank you for…"></textarea>
       <div class="composer-row">
         <div class="swatches" role="group" aria-label="Paper"><span class="lbl">Paper</span></div>
         <div class="composer-actions">
@@ -296,7 +296,7 @@ h2 em { font-weight: 600; }
 
     const notes = $("notes"); notes.replaceChildren();
     if (!list.length) {
-      if (s.db && s.loaded) { const e = el("div", "empty"); e.appendChild(el("strong", null, "The first page is yours")); e.appendChild(el("span", null, "No wishes yet. Write the first one for the founder.")); notes.appendChild(e); }
+      if (s.db && s.loaded) { const e = el("div", "empty"); e.appendChild(el("strong", null, "The first page is yours")); e.appendChild(el("span", null, "No wishes yet. Write the first one for Yomi.")); notes.appendChild(e); }
       return;
     }
     list.forEach((w, i) => {
