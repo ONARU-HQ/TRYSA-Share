@@ -1,275 +1,241 @@
 <title>Founder's Birthday Wall</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: an evening-invitation hero (seal, foil headline, tilting card) over a gold ribbon,
-   then a wall of letters on paper sealed in gold; one column on phones.
-   Deliberate single black-and-gold look that matches the card, so no light theme. */
+/* Layout: SaaS product page. Sticky top bar; hero (copy + live stats left, the card in a product frame right);
+   then a feed section with a comment-style composer and a sortable grid of wishes. One column on phones. */
 :root {
-  --black: #070605;          /* page ground */
-  --black-2: #110f0b;        /* raised surfaces */
-  --line: #2a2318;           /* hairlines */
-  --gold: #c9a24c;           /* primary gold */
-  --gold-hi: #f3dc9a;        /* highlight gold */
-  --ivory: #f4ecdb;          /* primary text */
-  --ivory-soft: #a99f8b;     /* secondary text */
-  --foil: linear-gradient(100deg, #8a6a2a 0%, #d9b45f 18%, #fff4cf 30%, #c49a43 46%, #f2d88f 62%, #9c7731 78%, #e9cc85 90%, #8a6a2a 100%);
-  --serif: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
-  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  color-scheme: dark;
+  --bg: #f7f8fa;            /* page */
+  --surface: #ffffff;       /* cards */
+  --surface-2: #f1f3f6;     /* subtle fills */
+  --border: #e4e7ec;        /* hairlines */
+  --text: #0e1116;          /* primary text */
+  --text-2: #5b6472;        /* secondary text */
+  --accent: #0a6cff;        /* TRYSA blue */
+  --accent-soft: #e8f1ff;   /* accent tint */
+  --accent-ink: #ffffff;
+  --ok: #16a34a;
+  --shadow: 0 1px 2px rgba(16,24,40,.05), 0 8px 24px -12px rgba(16,24,40,.12);
+  --shadow-lg: 0 24px 60px -24px rgba(16,24,40,.28);
+  --sans: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b0c0f; --surface: #13151a; --surface-2: #1a1d23; --border: #262a32; --text: #f2f4f7; --text-2: #98a1b0;
+  --accent: #3b8cff; --accent-soft: rgba(59,140,255,.14); --accent-ink: #ffffff; --ok: #34d399;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6); --shadow-lg: 0 24px 60px -24px rgba(0,0,0,.8);
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0b0c0f; --surface: #13151a; --surface-2: #1a1d23; --border: #262a32; --text: #f2f4f7; --text-2: #98a1b0;
+  --accent: #3b8cff; --accent-soft: rgba(59,140,255,.14); --accent-ink: #ffffff; --ok: #34d399;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6); --shadow-lg: 0 24px 60px -24px rgba(0,0,0,.8);
+  color-scheme: dark; }
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body {
-  margin: 0; background: var(--black); color: var(--ivory); font: 16px/1.6 var(--sans);
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  overflow-x: hidden; -webkit-font-smoothing: antialiased;
-}
-.wrap { max-width: 1160px; margin: 0 auto; }
-:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; border-radius: 4px; }
-.foil { background: var(--foil); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
-.label { font: 500 11px/1.4 var(--sans); letter-spacing: .36em; text-transform: uppercase; color: var(--gold); }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 var(--sans); -webkit-font-smoothing: antialiased;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 1140px; margin: 0 auto; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.mono { font-family: var(--mono); }
+
+/* Top bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  background: color-mix(in srgb, var(--surface) 86%, transparent); backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--border); }
+.bar-in { max-width: 1140px; margin: 0 auto; height: 60px; display: flex; align-items: center; gap: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.logo { display: flex; align-items: center; gap: 9px; font-weight: 700; letter-spacing: -.01em; font-size: 16px; }
+.logo-mark { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 14px; font-weight: 700; }
+.crumb { color: var(--text-2); font-size: 14px; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.crumb::before { content: "/"; color: var(--border); }
+.crumb span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar .spacer { flex: 1; }
+
+.btn { appearance: none; border: 0; cursor: pointer; font: 500 14px/1 var(--sans); height: 38px; padding: 0 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; transition: background .15s ease, box-shadow .15s ease, transform .15s ease; white-space: nowrap; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 1px 0 rgba(255,255,255,.2) inset, 0 1px 2px rgba(16,24,40,.2); }
+.btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
+.btn-secondary { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 1px var(--border), 0 1px 2px rgba(16,24,40,.05); }
+.btn-secondary:hover { background: var(--surface-2); }
+.btn-lg { height: 46px; padding: 0 20px; font-size: 15px; border-radius: 10px; }
+.btn[disabled] { opacity: .5; cursor: default; transform: none; }
+.btn svg { width: 16px; height: 16px; }
 
 /* Hero */
-.hero {
-  position: relative; isolation: isolate; overflow: hidden;
-  margin-top: calc(-1 * env(safe-area-inset-top, 0px)); padding-top: calc(env(safe-area-inset-top, 0px) + 72px); padding-bottom: 104px;
-  margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  background:
-    radial-gradient(900px 620px at 76% 42%, rgba(201,162,76,.18), transparent 68%),
-    radial-gradient(700px 500px at 8% 0%, rgba(201,162,76,.07), transparent 70%),
-    var(--black);
-}
-#dust { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-.hero-grid { display: grid; grid-template-columns: minmax(0,1.08fr) minmax(0,.92fr); gap: 72px; align-items: center; }
+.hero { padding-block: 64px 72px; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,.9fr); gap: 64px; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); font-size: 13px; color: var(--text-2); }
+.pill b { background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 12px; padding: 2px 8px; border-radius: 999px; }
+h1 { font-weight: 650; font-size: clamp(40px, 5.6vw, 64px); line-height: 1.02; letter-spacing: -.035em; margin: 22px 0 18px; text-wrap: balance; }
+h1 .hl { color: var(--accent); }
+.sub { font-size: 18px; line-height: 1.6; color: var(--text-2); max-width: 32em; margin: 0; }
+.ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+.stats { margin-top: 40px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow: hidden; max-width: 520px; }
+.stat { padding: 14px 18px; display: grid; gap: 2px; }
+.stat + .stat { border-left: 1px solid var(--border); }
+.stat .k { font-size: 12px; color: var(--text-2); }
+.stat .v { font-size: 22px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.live { display: inline-flex; align-items: center; gap: 6px; }
+.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent); }
 
-.seal-row { display: flex; align-items: center; gap: 18px; }
-.monogram { width: 56px; height: 56px; flex: none; }
-.meta { display: grid; gap: 4px; }
-.meta .date { font-family: var(--serif); font-style: italic; font-size: 20px; letter-spacing: .02em; color: var(--ivory); }
+.frame { position: relative; justify-self: center; width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-lg); overflow: hidden; }
+.frame-top { height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.frame-top .file { font: 500 12px var(--mono); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.frame-top .tag { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.frame img { display: block; width: 100%; height: auto; max-width: 100%; aspect-ratio: 4/5; }
+.toast { position: absolute; left: -28px; bottom: -26px; display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; box-shadow: var(--shadow-lg); font-size: 13px; max-width: 280px; }
+.toast[hidden] { display: none; }
+.toast .t { min-width: 0; }
+.toast .t b { display: block; font-weight: 600; }
+.toast .t span { color: var(--text-2); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage { position: relative; justify-self: center; width: 100%; max-width: 440px; }
 
-h1 { font-family: var(--serif); font-weight: 500; margin: 34px 0 0; line-height: .86; letter-spacing: -.015em; }
-h1 .l1 { display: block; font-size: clamp(60px, 8.6vw, 118px); }
-h1 .l2 { display: block; font-style: italic; font-weight: 600; font-size: clamp(76px, 11.4vw, 158px); padding: 0 .06em .1em 0; margin-left: -.04em; }
-h1 .foil { animation: sheen 9s ease-in-out infinite; }
-@keyframes sheen { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-.to { display: flex; align-items: center; gap: 18px; margin: 18px 0 30px; font-family: var(--serif); font-style: italic; font-size: clamp(26px, 3vw, 36px); color: var(--ivory); }
-.to::before { content: ""; width: 56px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
-.lede { font-family: var(--serif); font-size: 22px; line-height: 1.5; color: var(--ivory-soft); max-width: 29em; margin: 0; }
-.actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 38px; }
-.btn { position: relative; overflow: hidden; appearance: none; border: 0; cursor: pointer; font: 600 13px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase; padding: 19px 28px; border-radius: 1px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; transition: box-shadow .25s ease, color .25s ease, transform .25s ease; }
-.btn-gold { background: linear-gradient(100deg, #b8913f, #f0d48a 45%, #c9a24c 70%, #a8822f); color: #120e06; box-shadow: 0 10px 30px -10px rgba(201,162,76,.55); }
-.btn-gold::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); transform: translateX(-120%); transition: transform .8s ease; }
-.btn-gold:hover::after { transform: translateX(120%); }
-.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 16px 36px -12px rgba(201,162,76,.7); }
-.btn-line { background: transparent; color: var(--gold-hi); box-shadow: inset 0 0 0 1px rgba(201,162,76,.6); }
-.btn-line:hover { box-shadow: inset 0 0 0 1px var(--gold-hi); color: var(--ivory); }
-.btn[disabled] { opacity: .45; cursor: default; transform: none; }
-.tally { margin-top: 34px; display: flex; align-items: center; gap: 14px; color: var(--ivory-soft); font-size: 14px; }
-.faces { display: flex; }
-.faces:empty { display: none; }
-.faces span { margin-left: -6px; }
-.faces span:first-child { margin-left: 0; }
+/* Feed section */
+.section { padding-block: 72px 56px; border-top: 1px solid var(--border); }
+.sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.eyebrow { font: 500 12px var(--mono); color: var(--accent); letter-spacing: .04em; text-transform: uppercase; }
+h2 { font-weight: 650; font-size: clamp(26px, 3.4vw, 34px); letter-spacing: -.025em; line-height: 1.15; margin: 8px 0 0; }
+.seg { display: inline-flex; padding: 3px; border-radius: 9px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border); }
+.seg button { appearance: none; border: 0; background: transparent; color: var(--text-2); font: 500 13px var(--sans); height: 30px; padding: 0 12px; border-radius: 7px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(16,24,40,.12), inset 0 0 0 1px var(--border); }
 
-/* The card on stage */
-.stage { position: relative; justify-self: center; width: 100%; max-width: 450px; perspective: 1200px; }
-.halo { position: absolute; inset: -14% -18%; background: radial-gradient(closest-side, rgba(243,220,154,.22), transparent 72%); filter: blur(10px); z-index: -1; }
-.card3d { position: relative; transform-style: preserve-3d; transform: rotateX(var(--rx, 2deg)) rotateY(var(--ry, -6deg)); transition: transform .5s cubic-bezier(.2,.7,.2,1); }
-.card3d img { display: block; width: 100%; height: auto; max-width: 100%; aspect-ratio: 4/5; border-radius: 6px; box-shadow: 0 60px 100px -40px rgba(0,0,0,.95), 0 0 0 1px rgba(201,162,76,.35); }
-.card3d .glare { position: absolute; inset: 0; border-radius: 6px; pointer-events: none; background: radial-gradient(400px 300px at var(--gx, 30%) var(--gy, 20%), rgba(255,244,207,.18), transparent 60%); mix-blend-mode: screen; }
-.stage .tag { position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%); white-space: nowrap; }
+.composer { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); margin-bottom: 28px; overflow: hidden; }
+.composer:focus-within { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); box-shadow: 0 0 0 4px var(--accent-soft), var(--shadow); }
+.c-body { display: flex; gap: 14px; padding: 18px 18px 6px; }
+.c-body textarea { flex: 1; min-width: 0; min-height: 84px; resize: vertical; border: 0; outline: 0; background: transparent; color: var(--text); font: 16px/1.55 var(--sans); padding: 6px 0 0; }
+.c-body textarea::placeholder { color: var(--text-2); }
+.c-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 14px 10px 18px; border-top: 1px solid var(--border); background: var(--surface-2); }
+.c-foot .hint { font-size: 13px; color: var(--text-2); }
+.c-foot .spacer { flex: 1; }
+.chars { font: 12px var(--mono); color: var(--text-2); font-variant-numeric: tabular-nums; }
+.chars.over { color: #e5484d; }
+.link-btn { background: none; border: 0; color: var(--text-2); font: 500 13px var(--sans); cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+.link-btn:hover { color: var(--text); background: var(--surface); }
+.status { font-size: 13px; color: var(--text-2); padding: 0 18px 12px; min-height: 0; }
+.status:empty { display: none; }
+.notice { border: 1px dashed var(--border); border-radius: 14px; padding: 18px 20px; color: var(--text-2); margin-bottom: 28px; background: var(--surface); }
 
-/* Ribbon */
-.ribbon { margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); border-block: 1px solid rgba(201,162,76,.35); background: linear-gradient(180deg, #0d0b07, #080705); overflow: hidden; }
-.ribbon-track { display: flex; width: max-content; animation: drift 60s linear infinite; }
-.ribbon span { font-family: var(--serif); font-style: italic; font-size: 26px; padding: 16px 0; white-space: nowrap; color: var(--gold-hi); }
-.ribbon i { display: inline-block; width: 6px; height: 6px; transform: rotate(45deg); background: var(--gold); margin: 0 30px; vertical-align: middle; }
-@keyframes drift { to { transform: translateX(-50%); } }
+.av { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: 14px; color: #fff; }
+.feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.post { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; display: grid; gap: 12px; align-content: start; box-shadow: 0 1px 2px rgba(16,24,40,.04); transition: box-shadow .2s ease, transform .2s ease; }
+.post:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.post.mine { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.post header { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.post .meta { min-width: 0; display: grid; }
+.post .who { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.post .when { font-size: 12px; color: var(--text-2); }
+.post .badge { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 3px 8px; border-radius: 6px; }
+.post p { margin: 0; font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.post .rm { justify-self: start; background: none; border: 0; padding: 0; color: var(--text-2); font: 500 12px var(--sans); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.empty { grid-column: 1 / -1; text-align: center; padding: 48px 20px; border: 1px dashed var(--border); border-radius: 14px; background: var(--surface); color: var(--text-2); }
+.empty strong { display: block; color: var(--text); font-size: 17px; margin-bottom: 4px; }
 
-/* Wall */
-.wall { padding-block: 96px 56px; }
-.wall-head { display: grid; justify-items: center; text-align: center; gap: 14px; margin-bottom: 48px; }
-.ornament { width: 150px; height: 18px; }
-h2 { font-family: var(--serif); font-weight: 500; font-size: clamp(40px, 5.4vw, 64px); line-height: 1; margin: 0; text-wrap: balance; }
-h2 em { font-weight: 600; }
-.count { color: var(--ivory-soft); font-variant-numeric: tabular-nums; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
-
-.composer { position: relative; max-width: 760px; margin: 0 auto 64px; background: linear-gradient(180deg, #14110c, #0e0c08); border: 1px solid rgba(201,162,76,.28); padding: 28px; display: grid; gap: 18px; }
-.composer::before, .composer::after { content: ""; position: absolute; width: 18px; height: 18px; border: 1px solid var(--gold); }
-.composer::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
-.composer::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
-.composer label { font-family: var(--serif); font-size: 28px; font-weight: 500; font-style: italic; }
-.composer textarea { width: 100%; min-height: 140px; resize: vertical; border: 0; border-radius: 2px; padding: 22px 24px; font: 500 23px/1.5 var(--serif); color: var(--pick-ink, #1a150c); background: var(--grain), var(--pick, #f4ecdb); background-blend-mode: soft-light, normal; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08), 0 20px 40px -24px rgba(0,0,0,.9); transition: background-color .25s ease, color .25s ease; }
-.composer textarea::placeholder { color: currentColor; opacity: .4; font-style: italic; }
-.composer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
-.swatches { display: flex; gap: 12px; align-items: center; }
-.swatches .lbl { color: var(--ivory-soft); font-size: 11px; letter-spacing: .3em; text-transform: uppercase; margin-right: 4px; }
-.swatch { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(201,162,76,.5); cursor: pointer; padding: 0; transition: transform .2s ease; }
-.swatch:hover { transform: scale(1.1); }
-.swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--black-2), 0 0 0 4px var(--gold-hi); }
-.composer-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.chars { color: var(--ivory-soft); font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .06em; }
-.chars.over { color: #ff9b8a; }
-.link-btn { background: none; border: 0; color: var(--ivory-soft); font: 500 13px var(--sans); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 4px; }
-.notice { max-width: 760px; margin: 0 auto 48px; border: 1px solid var(--line); padding: 20px 24px; color: var(--ivory-soft); font-family: var(--serif); font-size: 20px; font-style: italic; text-align: center; }
-.status { min-height: 1.5em; font-size: 13px; color: var(--gold-hi); }
-
-.notes { columns: 3 300px; column-gap: 28px; }
-.note { break-inside: avoid; position: relative; margin: 0 0 28px; padding: 40px 30px 22px; border-radius: 2px; background-image: var(--grain); background-blend-mode: soft-light; box-shadow: 0 30px 50px -28px rgba(0,0,0,.95), inset 0 0 0 1px rgba(0,0,0,.06); display: grid; gap: 22px; transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease; }
-.note:hover { transform: translateY(-4px) rotate(-.3deg); box-shadow: 0 40px 60px -30px rgba(0,0,0,.95), inset 0 0 0 1px rgba(0,0,0,.06); }
-.note.dark { box-shadow: inset 0 0 0 1px rgba(201,162,76,.5), 0 30px 50px -28px rgba(0,0,0,.95); }
-.note::before { content: "\201C"; position: absolute; top: 2px; left: 22px; font: 600 70px/1 var(--serif); opacity: .22; }
-.note p { margin: 0; font: 500 22px/1.5 var(--serif); white-space: pre-wrap; overflow-wrap: anywhere; }
-.note footer { display: flex; align-items: center; gap: 12px; font-size: 13px; }
-.note .who { font-family: var(--serif); font-style: italic; font-size: 19px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.note .when { margin-left: auto; opacity: .55; white-space: nowrap; font-size: 12px; letter-spacing: .04em; }
-.note .rm { background: none; border: 0; cursor: pointer; font: 500 12px var(--sans); color: inherit; opacity: .55; text-decoration: underline; padding: 2px; }
-.note.mine::after { content: "Yours"; position: absolute; top: 14px; right: 16px; font: 600 10px/1 var(--sans); letter-spacing: .24em; text-transform: uppercase; opacity: .6; }
-
-/* Wax seal used for avatars */
-.seal { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center; font: 600 17px/1 var(--serif); color: #4a360e;
-  background: radial-gradient(circle at 35% 30%, #fff1c4, #e2bd67 38%, #b48b37 70%, #8a6a2a);
-  box-shadow: inset 0 0 0 3px rgba(255,241,196,.35), inset 0 -3px 6px rgba(80,55,10,.45), 0 3px 8px rgba(0,0,0,.35); text-shadow: 0 1px 0 rgba(255,241,196,.6); }
-.faces .seal { border: 2px solid var(--black); width: 32px; height: 32px; font-size: 15px; }
-
-.empty { max-width: 760px; margin: 0 auto; text-align: center; padding: 56px 24px; color: var(--ivory-soft); border: 1px solid var(--line); }
-.empty strong { display: block; color: var(--ivory); font-family: var(--serif); font-weight: 500; font-style: italic; font-size: 32px; margin-bottom: 8px; }
-
-.foot { border-top: 1px solid var(--line); padding-block: 36px 52px; display: grid; justify-items: center; gap: 12px; text-align: center; color: var(--ivory-soft); font-size: 13px; }
-.foot .sig { font-family: var(--serif); font-style: italic; font-size: 26px; }
+.foot { border-top: 1px solid var(--border); padding-block: 24px 40px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; color: var(--text-2); font-size: 13px; }
 #burst { position: fixed; inset: 0; pointer-events: none; z-index: 20; }
 
-@media (max-width: 860px) {
-  .hero { padding-top: calc(env(safe-area-inset-top, 0px) + 44px); padding-bottom: 88px; }
-  .hero-grid { grid-template-columns: minmax(0,1fr); gap: 64px; }
-  .stage { max-width: 360px; }
-  .lede { font-size: 20px; }
-  .wall { padding-block: 72px 40px; }
-  .composer { padding: 20px; }
+@media (max-width: 880px) {
+  .hero { grid-template-columns: minmax(0,1fr); gap: 48px; padding-block: 40px 56px; }
+  .toast { left: 12px; bottom: -26px; }
+  .stage { margin-bottom: 20px; }
+  .bar .hide-sm { display: none; }
 }
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { animation: none !important; transition: none !important; }
-  .card3d { transform: none; }
-}
+@media (max-width: 420px) { .stat { padding: 12px; } .stat .v { font-size: 19px; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
 </style>
 
 <canvas id="burst" aria-hidden="true"></canvas>
 
-<header class="hero">
-  <canvas id="dust" aria-hidden="true"></canvas>
-  <div class="wrap hero-grid">
-    <div>
-      <div class="seal-row">
-        <svg class="monogram" viewBox="0 0 56 56" aria-hidden="true">
-          <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a6a2a"/><stop offset=".45" stop-color="#fbe9b0"/><stop offset="1" stop-color="#a8822f"/></linearGradient></defs>
-          <circle cx="28" cy="28" r="26.5" fill="none" stroke="url(#g)" stroke-width="1"/>
-          <circle cx="28" cy="28" r="22.5" fill="none" stroke="url(#g)" stroke-width=".6" stroke-dasharray="1.5 2.5"/>
-          <text x="28" y="36.5" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-style="italic" font-weight="600" font-size="25" fill="url(#g)">T</text>
-        </svg>
-        <div class="meta"><span class="label">The TRYSA community</span><span class="date">Monday, 24 November 2026</span></div>
-      </div>
-      <h1><span class="l1 foil">Happy</span><span class="l2 foil">Birthday</span></h1>
-      <div class="to"><span>to <span id="founder-name">Yomi Onalaru</span></span></div>
-      <p class="lede">Today we celebrate our founder, the person who started TRYSA. Yomi, thank you for the vision, the late nights, and for building a home for all of us.</p>
-      <div class="actions">
-        <a class="btn btn-gold" href="#wall">Leave a wish</a>
-        <button class="btn btn-line" id="save-card" type="button">Save the card</button>
-      </div>
-      <div class="tally" aria-live="polite"><div class="faces" id="faces"></div><span id="tally-text">The wall is open for wishes</span></div>
-    </div>
-    <div class="stage" id="stage">
-      <div class="halo" aria-hidden="true"></div>
-      <div class="card3d" id="card3d">
-        <img src="card.png" alt="Black and gold birthday card with Yomi Onalaru's portrait in a gold arch: Happy Birthday Yomi Onalaru, our founder, the one who started it all. With love, the TRYSA community, 24 November 2026." width="1080" height="1350">
-        <div class="glare" aria-hidden="true"></div>
-      </div>
-      <span class="tag label">From all of us</span>
-    </div>
+<div class="bar">
+  <div class="bar-in">
+    <div class="logo"><span class="logo-mark">T</span>TRYSA</div>
+    <div class="crumb"><span>Community · Yomi's birthday</span></div>
+    <div class="spacer"></div>
+    <button class="btn btn-secondary hide-sm" id="save-card-top" type="button">Save card</button>
+    <a class="btn btn-primary" href="#wishes">Leave a wish</a>
   </div>
-</header>
-
-<div class="ribbon" aria-hidden="true">
-  <div class="ribbon-track" id="ribbon"></div>
 </div>
 
 <main class="wrap">
-  <section class="wall" id="wall" aria-labelledby="wall-title">
-    <div class="wall-head">
-      <svg class="ornament" viewBox="0 0 150 18" aria-hidden="true"><path d="M0 9 H58 M92 9 H150" stroke="#c9a24c" stroke-width=".8"/><path d="M75 1 L83 9 L75 17 L67 9 Z" fill="none" stroke="#c9a24c" stroke-width=".9"/><circle cx="75" cy="9" r="2.2" fill="#f3dc9a"/><circle cx="62" cy="9" r="1.2" fill="#c9a24c"/><circle cx="88" cy="9" r="1.2" fill="#c9a24c"/></svg>
-      <div class="label">The wishes wall</div>
-      <h2 id="wall-title">Words from <em class="foil">the community</em></h2>
-      <span class="count" id="count"></span>
+  <section class="hero">
+    <div>
+      <span class="pill"><b>Today</b>Monday, 24 November 2026</span>
+      <h1>Happy birthday, <span class="hl">Yomi.</span></h1>
+      <p class="sub">Today we celebrate Yomi Onalaru, the founder who started TRYSA. Thank you for the vision, the late nights, and for building a home for all of us. Add your wish to the wall below.</p>
+      <div class="ctas">
+        <a class="btn btn-primary btn-lg" href="#wishes">Leave a wish
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <button class="btn btn-secondary btn-lg" id="save-card" type="button">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8m0 0L5 7m3 3 3-3M3 12.5h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Save the card</button>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><span class="k">Wishes</span><span class="v" id="stat-wishes">0</span></div>
+        <div class="stat"><span class="k">Latest</span><span class="v" id="stat-latest">–</span></div>
+        <div class="stat"><span class="k">Wall</span><span class="v live" id="stat-state" style="font-size:15px;font-weight:500">Open</span></div>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="frame">
+        <div class="frame-top"><span class="file">yomi-birthday-card.png</span><span class="tag">1080 × 1350</span></div>
+        <img src="card.png" alt="Black and gold birthday card with Yomi Onalaru's portrait in a gold arch: Happy Birthday Yomi Onalaru, our founder, the one who started it all. With love, the TRYSA community, 24 November 2026." width="1080" height="1350">
+      </div>
+      <div class="toast" id="toast" hidden>
+        <span class="av" id="toast-av"></span>
+        <span class="t"><b id="toast-who"></b><span id="toast-text"></span></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="wishes" aria-labelledby="wishes-title">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow">Wishes wall</div>
+        <h2 id="wishes-title">Messages for Yomi</h2>
+      </div>
+      <div class="seg" role="group" aria-label="Sort wishes">
+        <button type="button" id="sort-new" aria-pressed="true">Newest</button>
+        <button type="button" id="sort-old" aria-pressed="false">Oldest</button>
+      </div>
     </div>
 
     <form class="composer" id="composer" hidden>
-      <label for="wish-text" id="composer-label">Write your wish</label>
-      <textarea id="wish-text" maxlength="400" placeholder="Happy birthday, Yomi! Thank you for…"></textarea>
-      <div class="composer-row">
-        <div class="swatches" role="group" aria-label="Paper"><span class="lbl">Paper</span></div>
-        <div class="composer-actions">
-          <span class="chars" id="chars">0 / 280</span>
-          <button class="link-btn" type="button" id="remove-mine" hidden>Remove my wish</button>
-          <button class="btn btn-gold" type="submit" id="post">Seal &amp; post</button>
-        </div>
+      <div class="c-body">
+        <span class="av" id="me-av" aria-hidden="true">?</span>
+        <label for="wish-text" class="mono" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Your birthday wish</label>
+        <textarea id="wish-text" maxlength="400" placeholder="Write a birthday wish for Yomi…"></textarea>
       </div>
       <div class="status" id="status" aria-live="polite"></div>
+      <div class="c-foot">
+        <span class="hint" id="composer-hint">One wish per person. You can edit it later.</span>
+        <span class="spacer"></span>
+        <span class="chars" id="chars">0/280</span>
+        <button class="link-btn" type="button" id="remove-mine" hidden>Remove</button>
+        <button class="btn btn-primary" type="submit" id="post">Post wish</button>
+      </div>
     </form>
-    <div class="notice" id="notice">Opening the wall…</div>
+    <div class="notice" id="notice">Loading the wall…</div>
 
-    <div class="notes" id="notes"></div>
+    <div class="feed" id="feed"></div>
   </section>
 </main>
 
 <footer class="wrap foot">
-  <svg class="ornament" viewBox="0 0 150 18" aria-hidden="true"><path d="M0 9 H58 M92 9 H150" stroke="#c9a24c" stroke-width=".8"/><path d="M75 1 L83 9 L75 17 L67 9 Z" fill="none" stroke="#c9a24c" stroke-width=".9"/><circle cx="75" cy="9" r="2.2" fill="#f3dc9a"/></svg>
-  <span class="sig foil">With love, the TRYSA community</span>
-  <span>24 November 2026 · One wish each, yours to edit any time</span>
+  <span>© TRYSA community · 24 November 2026</span>
+  <span>Made with love for Yomi Onalaru</span>
 </footer>
 
 <script>
 (() => {
   const MAX = 280;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // [name, paper, ink, dark?]
-  const COLORS = [
-    ["ivory", "#f4ecdb", "#1a150c", false],
-    ["champagne", "#ecdcb4", "#1a150c", false],
-    ["gold", "#d8b466", "#140f06", false],
-    ["onyx", "#16130d", "#f3dc9a", true],
-  ];
+  const AV = ["#0a6cff", "#7c3aed", "#0891b2", "#16a34a", "#ea580c", "#db2777", "#4f46e5", "#ca8a04"];
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
-  const s = { db: null, user: null, myId: null, isAdmin: false, wishes: [], names: {}, pick: 0, mine: null, busy: false, loaded: false };
+  const s = { db: null, user: null, myId: null, isAdmin: false, wishes: [], names: {}, mine: null, busy: false, loaded: false, sort: "new" };
 
-  // Ribbon: "happy birthday" in several languages, doubled for a seamless loop
-  const greetings = ["Happy birthday", "Joyeux anniversaire", "Feliz cumpleaños", "Buon compleanno", "Alles Gute zum Geburtstag", "Feliz aniversário", "Gelukkige verjaardag", "Grattis på födelsedagen", "Wszystkiego najlepszego", "Iyi ki doğdun"];
-  const rib = $("ribbon");
-  for (let k = 0; k < 2; k++) greetings.forEach((g) => { const sp = el("span", null, g); sp.appendChild(el("i")); rib.appendChild(sp); });
-
-  // Paper picker
-  const sw = document.querySelector(".swatches");
-  COLORS.forEach(([name, bg], i) => {
-    const b = el("button", "swatch"); b.type = "button"; b.style.background = bg;
-    b.setAttribute("aria-label", name + " paper"); b.setAttribute("aria-pressed", String(i === 0));
-    b.addEventListener("click", () => setPick(i)); sw.appendChild(b);
-  });
-  function setPick(i) {
-    s.pick = i; const c = $("composer"); c.style.setProperty("--pick", COLORS[i][1]); c.style.setProperty("--pick-ink", COLORS[i][2]);
-    sw.querySelectorAll(".swatch").forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
-  }
-
-  const text = $("wish-text");
-  function updateChars() {
-    const n = text.value.trim().length; const c = $("chars");
-    c.textContent = n + " / " + MAX; c.classList.toggle("over", n > MAX);
-    $("post").disabled = s.busy || n === 0 || n > MAX;
-  }
-  text.addEventListener("input", updateChars);
-
+  const hash = (str) => { let h = 0; for (const c of String(str)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); };
+  const avColor = (id) => AV[hash(id) % AV.length];
+  const initial = (name) => (name || "?").trim().charAt(0).toUpperCase() || "?";
   function ago(ms) {
     if (!ms) return "";
     const m = Math.round((Date.now() - ms) / 60000);
@@ -277,61 +243,75 @@ h2 em { font-weight: 600; }
     const h = Math.round(m / 60); if (h < 24) return h + "h ago";
     return Math.round(h / 24) + "d ago";
   }
-  const initial = (name) => (name || "?").trim().charAt(0).toUpperCase() || "?";
-  const styleOf = (w, i) => COLORS[(Number.isInteger(w.color) && w.color >= 0 && w.color < COLORS.length) ? w.color : i % COLORS.length];
+
+  const text = $("wish-text");
+  function updateChars() {
+    const n = text.value.trim().length; const c = $("chars");
+    c.textContent = n + "/" + MAX; c.classList.toggle("over", n > MAX);
+    $("post").disabled = s.busy || n === 0 || n > MAX;
+  }
+  text.addEventListener("input", updateChars);
+  text.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") $("composer").requestSubmit(); });
+
+  function setSort(v) { s.sort = v; $("sort-new").setAttribute("aria-pressed", String(v === "new")); $("sort-old").setAttribute("aria-pressed", String(v === "old")); render(); }
+  $("sort-new").addEventListener("click", () => setSort("new"));
+  $("sort-old").addEventListener("click", () => setSort("old"));
 
   async function resolveNames(ids) {
     if (!s.user || !ids.length) return;
     try { const ps = await s.user.profiles(ids); ids.forEach((id) => { s.names[id] = (ps && ps[id] && ps[id].name) || ""; }); } catch (_) {}
   }
+  const nameOf = (id) => s.names[id] || (id === s.myId ? "You" : "Community member");
 
   function render() {
-    const list = s.wishes;
-    $("count").textContent = list.length ? list.length + (list.length === 1 ? " wish so far" : " wishes so far") : "";
-    const faces = $("faces"); faces.replaceChildren();
-    if (list.length) {
-      list.slice(0, 4).forEach((w) => faces.appendChild(el("span", "seal", initial(s.names[w.id]))));
-      $("tally-text").textContent = list.length + (list.length === 1 ? " person has" : " people have") + " left a wish";
-    } else $("tally-text").textContent = "The wall is open for wishes";
+    const list = s.wishes.slice().sort((a, b) => s.sort === "new" ? (b.createdAt || 0) - (a.createdAt || 0) : (a.createdAt || 0) - (b.createdAt || 0));
+    $("stat-wishes").textContent = String(list.length);
+    const newest = s.wishes.reduce((m, w) => Math.max(m, w.updatedAt || w.createdAt || 0), 0);
+    $("stat-latest").textContent = newest ? ago(newest) : "–";
 
-    const notes = $("notes"); notes.replaceChildren();
+    const latest = s.wishes.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0];
+    const toast = $("toast");
+    if (latest) {
+      toast.hidden = false; $("toast-av").textContent = initial(nameOf(latest.id)); $("toast-av").style.background = avColor(latest.id);
+      $("toast-who").textContent = nameOf(latest.id) + " left a wish"; $("toast-text").textContent = latest.text;
+    } else toast.hidden = true;
+
+    const feed = $("feed"); feed.replaceChildren();
     if (!list.length) {
-      if (s.db && s.loaded) { const e = el("div", "empty"); e.appendChild(el("strong", null, "The first page is yours")); e.appendChild(el("span", null, "No wishes yet. Write the first one for Yomi.")); notes.appendChild(e); }
+      if (s.db && s.loaded) { const e = el("div", "empty"); e.appendChild(el("strong", null, "No wishes yet")); e.appendChild(el("span", null, "Be the first to write something for Yomi.")); feed.appendChild(e); }
       return;
     }
-    list.forEach((w, i) => {
-      const st = styleOf(w, i);
-      const n = el("article", "note" + (st[3] ? " dark" : "") + (w.id === s.myId ? " mine" : ""));
-      n.style.backgroundColor = st[1]; n.style.color = st[2];
-      n.appendChild(el("p", null, w.text));
-      const f = el("footer"); const name = s.names[w.id] || (w.id === s.myId ? "You" : "A friend");
-      f.appendChild(el("span", "seal", initial(name))); f.appendChild(el("span", "who", name));
+    list.forEach((w) => {
+      const card = el("article", "post" + (w.id === s.myId ? " mine" : ""));
+      const h = el("header"); const av = el("span", "av", initial(nameOf(w.id))); av.style.background = avColor(w.id); h.appendChild(av);
+      const meta = el("div", "meta"); meta.appendChild(el("span", "who", nameOf(w.id))); meta.appendChild(el("span", "when", ago(w.updatedAt || w.createdAt) + (w.updatedAt && w.updatedAt !== w.createdAt ? " · edited" : "")));
+      h.appendChild(meta); if (w.id === s.myId) h.appendChild(el("span", "badge", "You"));
+      card.appendChild(h); card.appendChild(el("p", null, w.text));
       if (s.isAdmin && w.id !== s.myId) {
         const rm = el("button", "rm", "Remove"); rm.type = "button";
         rm.addEventListener("click", async () => { rm.disabled = true; try { await s.db.doc("wishes/" + w.id).delete(); } catch (_) { rm.disabled = false; rm.textContent = "Couldn't remove"; } });
-        f.appendChild(rm);
+        card.appendChild(rm);
       }
-      f.appendChild(el("span", "when", ago(w.updatedAt || w.createdAt)));
-      n.appendChild(f); notes.appendChild(n);
+      feed.appendChild(card);
     });
   }
 
   function syncComposer() {
     const has = !!s.mine;
-    $("composer-label").textContent = has ? "Your wish" : "Write your wish";
-    $("post").textContent = has ? "Update wish" : "Seal & post";
+    $("post").textContent = has ? "Update wish" : "Post wish";
     $("remove-mine").hidden = !has;
+    $("composer-hint").textContent = has ? "This is your wish on the wall. Edit it any time." : "One wish per person. You can edit it later.";
   }
 
   $("composer").addEventListener("submit", async (e) => {
     e.preventDefault();
     const t = text.value.trim(); if (!t || t.length > MAX || !s.db || !s.myId) return;
-    s.busy = true; updateChars(); $("status").textContent = "Sealing your wish…";
+    s.busy = true; updateChars(); $("status").textContent = "Posting…";
     const now = Date.now();
-    const body = { text: t, color: s.pick, createdAt: (s.mine && s.mine.createdAt) || now, updatedAt: now };
+    const body = { text: t, createdAt: (s.mine && s.mine.createdAt) || now, updatedAt: now };
     try {
       await s.db.doc("wishes/" + s.myId).set(body);
-      $("status").textContent = s.mine ? "Your wish is updated." : "Your wish is on the wall. Thank you!";
+      $("status").textContent = s.mine ? "Wish updated." : "Wish posted. Thank you!";
       burst();
     } catch (err) {
       $("status").textContent = (err && (err.code === "permission_denied" || err.code === "invalid_argument"))
@@ -342,96 +322,67 @@ h2 em { font-weight: 600; }
   $("remove-mine").addEventListener("click", async () => {
     if (!s.db || !s.myId) return;
     const b = $("remove-mine");
-    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "Tap again to remove"; return; }
-    b.dataset.confirm = ""; b.textContent = "Remove my wish";
+    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "Click again to remove"; return; }
+    b.dataset.confirm = ""; b.textContent = "Remove";
     try { await s.db.doc("wishes/" + s.myId).delete(); text.value = ""; updateChars(); $("status").textContent = "Your wish was removed."; }
     catch (_) { $("status").textContent = "Couldn't remove your wish. Try again."; }
   });
 
   let dl = null;
-  $("save-card").addEventListener("click", async () => {
-    const b = $("save-card");
+  async function saveCard(btn) {
     try {
       if (!dl) throw new Error("none");
       const blob = await (await fetch("card.png")).blob();
-      await dl.save({ filename: "trysa-founder-birthday-card.png", data: blob });
-    } catch (_) { b.textContent = "Press and hold the card to save"; }
-  });
-
-  // Card tilt and glare follow the pointer
-  const stage = $("stage"), card = $("card3d");
-  if (!reduce) {
-    stage.addEventListener("pointermove", (e) => {
-      const r = stage.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-      card.style.setProperty("--ry", ((px - .5) * 16).toFixed(2) + "deg"); card.style.setProperty("--rx", ((.5 - py) * 12).toFixed(2) + "deg");
-      card.style.setProperty("--gx", (px * 100).toFixed(1) + "%"); card.style.setProperty("--gy", (py * 100).toFixed(1) + "%");
-    });
-    stage.addEventListener("pointerleave", () => { ["--rx", "--ry", "--gx", "--gy"].forEach((p) => card.style.removeProperty(p)); });
+      await dl.save({ filename: "yomi-birthday-card.png", data: blob });
+    } catch (_) { btn.textContent = "Press and hold the card to save"; }
   }
+  $("save-card").addEventListener("click", (e) => saveCard(e.currentTarget));
+  $("save-card-top").addEventListener("click", (e) => saveCard(e.currentTarget));
 
-  // Drifting gold dust behind the hero
-  (function dust() {
-    const c = $("dust"), x = c.getContext("2d"); let w = 0, h = 0, parts = [];
-    function size() {
-      const dpr = Math.min(devicePixelRatio || 1, 2); const r = c.getBoundingClientRect();
-      w = r.width; h = r.height; c.width = w * dpr; c.height = h * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
-      parts = Array.from({ length: Math.round(w * h / 9000) }, () => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.6 + .3, v: Math.random() * .25 + .05, a: Math.random() * .6 + .15, t: Math.random() * 6.28 }));
-    }
-    function draw() {
-      x.clearRect(0, 0, w, h);
-      parts.forEach((p) => {
-        if (!reduce) { p.y -= p.v; p.t += .02; if (p.y < -4) { p.y = h + 4; p.x = Math.random() * w; } }
-        x.globalAlpha = p.a * (.6 + .4 * Math.sin(p.t)); x.fillStyle = p.r > 1.3 ? "#fbe9b0" : "#c9a24c";
-        x.beginPath(); x.arc(p.x + Math.sin(p.t) * 6, p.y, p.r, 0, 6.283); x.fill();
-      });
-      if (!reduce) requestAnimationFrame(draw);
-    }
-    size(); draw(); addEventListener("resize", () => { size(); if (reduce) draw(); });
-  })();
-
-  // Gold-leaf burst after posting
   function burst() {
     if (reduce) return;
     const c = $("burst"), x = c.getContext("2d"), dpr = devicePixelRatio || 1;
     c.width = innerWidth * dpr; c.height = innerHeight * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const cols = ["#f3dc9a", "#c9a24c", "#fbe9b0", "#a8822f", "#f4ecdb"];
-    const ps = Array.from({ length: 140 }, () => ({ x: innerWidth / 2, y: innerHeight * .62, vx: (Math.random() - .5) * 14, vy: -Math.random() * 15 - 6, w: Math.random() * 9 + 4, c: cols[(Math.random() * cols.length) | 0], a: Math.random() * 6, spin: (Math.random() - .5) * .4 }));
+    const cols = ["#0a6cff", "#3b8cff", "#7c3aed", "#16a34a", "#f59e0b", "#db2777"];
+    const ps = Array.from({ length: 110 }, () => ({ x: innerWidth / 2, y: innerHeight * .6, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 6, w: Math.random() * 7 + 4, c: cols[(Math.random() * cols.length) | 0], a: Math.random() * 6, spin: (Math.random() - .5) * .4 }));
     const t0 = performance.now();
     (function f(t) {
-      const k = (t - t0) / 2000; x.clearRect(0, 0, innerWidth, innerHeight);
+      const k = (t - t0) / 1600; x.clearRect(0, 0, innerWidth, innerHeight);
       if (k >= 1) return;
-      ps.forEach((p) => { p.vy += .38; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.spin; x.save(); x.globalAlpha = 1 - k; x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.w / 2, -p.w / 4, p.w, p.w / 2 * Math.abs(Math.cos(p.a * 2)) + 1); x.restore(); });
+      ps.forEach((p) => { p.vy += .42; p.x += p.vx; p.y += p.vy; p.a += p.spin; x.save(); x.globalAlpha = 1 - k; x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.w / 2, -p.w / 4, p.w, p.w / 2); x.restore(); });
       requestAnimationFrame(f);
     })(t0);
   }
 
-  setPick(0); updateChars();
+  updateChars();
   const notice = $("notice");
   async function start() {
     const use = window.claude && window.claude.use;
     if (!use) { notice.textContent = "Open this page on claude.ai to read and leave wishes."; return; }
     const [db, user, downloads] = await Promise.all([use("db"), use("user"), use("downloads")]);
     s.db = db; s.user = user; dl = downloads;
-    if (!dl) $("save-card").textContent = "Press and hold the card to save";
-    if (!db) { notice.textContent = "Sign in to claude.ai to read the wall and leave a wish."; return; }
+    if (!dl) { $("save-card").textContent = "Press and hold the card to save"; $("save-card-top").hidden = true; }
+    if (!db) { notice.textContent = "Sign in to claude.ai to read the wall and leave a wish."; $("stat-state").textContent = "Sign in"; return; }
     s.myId = user ? await user.id() : null;
     s.isAdmin = user ? !!(await user.canEdit()) : false;
     const canWrite = user ? await user.can("data.write") : null;
     const canPost = !!s.myId && canWrite !== false;
+    if (user) { try { const me = await user.me(); $("me-av").textContent = initial(me.name || "You"); } catch (_) {} }
+    if (s.myId) $("me-av").style.background = avColor(s.myId);
     if (canPost) { $("composer").hidden = false; notice.hidden = true; }
-    else notice.textContent = "You can read the wall. Posting a wish needs contributor access from the page owner.";
+    else { notice.textContent = "You can read the wall. Posting a wish needs contributor access from the page owner."; $("stat-state").textContent = "Read only"; }
 
-    const timer = setTimeout(() => { if (!s.loaded) { notice.hidden = false; notice.textContent = "The wall is taking a while to open. Refresh the page to try again."; } }, 10000);
+    const timer = setTimeout(() => { if (!s.loaded) { notice.hidden = false; notice.textContent = "The wall is taking a while to load. Refresh the page to try again."; } }, 10000);
     db.collection("wishes").orderBy("createdAt", "desc").limit(300).onSnapshot(async (snap) => {
       s.loaded = true; clearTimeout(timer);
       if (canPost) notice.hidden = true;
       s.wishes = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((w) => typeof w.text === "string" && w.text.trim());
       const mine = s.wishes.find((w) => w.id === s.myId) || null;
-      if (mine && !s.mine && !text.value) { text.value = mine.text; if (Number.isInteger(mine.color) && mine.color < COLORS.length) setPick(mine.color); }
+      if (mine && !s.mine && !text.value) text.value = mine.text;
       s.mine = mine; syncComposer(); updateChars();
       await resolveNames(s.wishes.map((w) => w.id).filter((id) => !(id in s.names)));
       render();
-    }, () => { clearTimeout(timer); notice.hidden = false; notice.textContent = "The wall couldn't open. Refresh the page to try again."; });
+    }, () => { clearTimeout(timer); notice.hidden = false; notice.textContent = "The wall couldn't load. Refresh the page to try again."; });
   }
   start();
 })();
