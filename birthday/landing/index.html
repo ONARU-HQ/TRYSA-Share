@@ -1,192 +1,260 @@
 <title>Founder's Birthday Wall</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600&display=swap">
 <style>
-/* Layout: split hero (words left, the card right) over a wall of paper-and-gold notes; one column on phones.
+/* Layout: an evening-invitation hero (seal, foil headline, tilting card) over a gold ribbon,
+   then a wall of letters on paper sealed in gold; one column on phones.
    Deliberate single black-and-gold look that matches the card, so no light theme. */
 :root {
-  --black: #0a0907;          /* page ground */
-  --black-2: #13110d;        /* raised surfaces */
-  --line: #2e271b;           /* hairlines */
+  --black: #070605;          /* page ground */
+  --black-2: #110f0b;        /* raised surfaces */
+  --line: #2a2318;           /* hairlines */
   --gold: #c9a24c;           /* primary gold */
   --gold-hi: #f3dc9a;        /* highlight gold */
   --ivory: #f4ecdb;          /* primary text */
-  --ivory-soft: #b5ab97;     /* secondary text */
-  --foil: linear-gradient(100deg, #8a6a2a 0%, #d9b45f 22%, #fbe9b0 40%, #c49a43 58%, #f2d88f 76%, #9c7731 100%);
+  --ivory-soft: #a99f8b;     /* secondary text */
+  --foil: linear-gradient(100deg, #8a6a2a 0%, #d9b45f 18%, #fff4cf 30%, #c49a43 46%, #f2d88f 62%, #9c7731 78%, #e9cc85 90%, #8a6a2a 100%);
   --serif: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
   margin: 0; background: var(--black); color: var(--ivory); font: 16px/1.6 var(--sans);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  overflow-x: hidden;
+  overflow-x: hidden; -webkit-font-smoothing: antialiased;
 }
-.wrap { max-width: 1120px; margin: 0 auto; }
+.wrap { max-width: 1160px; margin: 0 auto; }
 :focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; border-radius: 4px; }
-.foil { background: var(--foil); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.label { font: 500 12px/1.4 var(--sans); letter-spacing: .32em; text-transform: uppercase; color: var(--gold); }
+.foil { background: var(--foil); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+.label { font: 500 11px/1.4 var(--sans); letter-spacing: .36em; text-transform: uppercase; color: var(--gold); }
 
 /* Hero */
 .hero {
-  margin-top: calc(-1 * env(safe-area-inset-top, 0px)); padding-top: calc(env(safe-area-inset-top, 0px) + 64px); padding-bottom: 88px;
+  position: relative; isolation: isolate; overflow: hidden;
+  margin-top: calc(-1 * env(safe-area-inset-top, 0px)); padding-top: calc(env(safe-area-inset-top, 0px) + 72px); padding-bottom: 104px;
   margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  background: radial-gradient(820px 560px at 74% 46%, rgba(201,162,76,.16), transparent 70%), var(--black);
-  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(900px 620px at 76% 42%, rgba(201,162,76,.18), transparent 68%),
+    radial-gradient(700px 500px at 8% 0%, rgba(201,162,76,.07), transparent 70%),
+    var(--black);
 }
-.hero-grid { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr); gap: 64px; align-items: center; }
-.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
-.meta .diamond { width: 6px; height: 6px; transform: rotate(45deg); background: var(--gold); }
-h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(56px, 8.4vw, 112px); line-height: .9; letter-spacing: -.01em; margin: 26px 0 26px; text-wrap: balance; }
-h1 .l1 { display: block; }
-h1 .l2 { display: block; font-style: italic; font-weight: 600; padding-bottom: .08em; }
-h1 .l3 { display: block; font-size: .42em; line-height: 1.2; font-style: italic; color: var(--ivory); margin-top: .25em; }
-.rule { display: flex; align-items: center; gap: 14px; margin: 0 0 26px; }
-.rule span { width: 72px; height: 1px; background: linear-gradient(90deg, var(--gold), transparent); }
-.rule i { width: 7px; height: 7px; transform: rotate(45deg); background: var(--gold); }
-.lede { font-family: var(--serif); font-size: 23px; line-height: 1.45; color: var(--ivory-soft); max-width: 30em; margin: 0; }
-.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
-.btn { appearance: none; border: 0; cursor: pointer; font: 600 15px/1 var(--sans); letter-spacing: .04em; padding: 17px 26px; border-radius: 2px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; transition: background .2s ease, box-shadow .2s ease, color .2s ease; }
-.btn-gold { background: var(--gold); color: var(--black); }
-.btn-gold:hover { background: var(--gold-hi); }
-.btn-line { background: transparent; color: var(--gold-hi); box-shadow: inset 0 0 0 1px var(--gold); }
+#dust { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+.hero-grid { display: grid; grid-template-columns: minmax(0,1.08fr) minmax(0,.92fr); gap: 72px; align-items: center; }
+
+.seal-row { display: flex; align-items: center; gap: 18px; }
+.monogram { width: 56px; height: 56px; flex: none; }
+.meta { display: grid; gap: 4px; }
+.meta .date { font-family: var(--serif); font-style: italic; font-size: 20px; letter-spacing: .02em; color: var(--ivory); }
+
+h1 { font-family: var(--serif); font-weight: 500; margin: 34px 0 0; line-height: .86; letter-spacing: -.015em; }
+h1 .l1 { display: block; font-size: clamp(60px, 8.6vw, 118px); }
+h1 .l2 { display: block; font-style: italic; font-weight: 600; font-size: clamp(76px, 11.4vw, 158px); padding: 0 .06em .1em 0; margin-left: -.04em; }
+h1 .foil { animation: sheen 9s ease-in-out infinite; }
+@keyframes sheen { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.to { display: flex; align-items: center; gap: 18px; margin: 18px 0 30px; font-family: var(--serif); font-style: italic; font-size: clamp(26px, 3vw, 36px); color: var(--ivory); }
+.to::before { content: ""; width: 56px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+.lede { font-family: var(--serif); font-size: 22px; line-height: 1.5; color: var(--ivory-soft); max-width: 29em; margin: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 38px; }
+.btn { position: relative; overflow: hidden; appearance: none; border: 0; cursor: pointer; font: 600 13px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase; padding: 19px 28px; border-radius: 1px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; transition: box-shadow .25s ease, color .25s ease, transform .25s ease; }
+.btn-gold { background: linear-gradient(100deg, #b8913f, #f0d48a 45%, #c9a24c 70%, #a8822f); color: #120e06; box-shadow: 0 10px 30px -10px rgba(201,162,76,.55); }
+.btn-gold::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); transform: translateX(-120%); transition: transform .8s ease; }
+.btn-gold:hover::after { transform: translateX(120%); }
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 16px 36px -12px rgba(201,162,76,.7); }
+.btn-line { background: transparent; color: var(--gold-hi); box-shadow: inset 0 0 0 1px rgba(201,162,76,.6); }
 .btn-line:hover { box-shadow: inset 0 0 0 1px var(--gold-hi); color: var(--ivory); }
-.btn[disabled] { opacity: .45; cursor: default; }
-.tally { margin-top: 30px; display: flex; align-items: center; gap: 14px; color: var(--ivory-soft); font-size: 14px; }
+.btn[disabled] { opacity: .45; cursor: default; transform: none; }
+.tally { margin-top: 34px; display: flex; align-items: center; gap: 14px; color: var(--ivory-soft); font-size: 14px; }
 .faces { display: flex; }
 .faces:empty { display: none; }
-.faces span { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 600 12px/1 var(--sans); border: 2px solid var(--black); margin-left: -8px; }
+.faces span { margin-left: -6px; }
 .faces span:first-child { margin-left: 0; }
-.card-frame { position: relative; justify-self: center; width: 100%; max-width: 440px; margin: 0; padding: 14px; border: 1px solid rgba(201,162,76,.45); }
-.card-frame img { display: block; width: 100%; height: auto; max-width: 100%; aspect-ratio: 4/5; box-shadow: 0 50px 90px -30px rgba(0,0,0,.9); }
-.card-frame figcaption { position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%); background: var(--black); padding: 0 14px; white-space: nowrap; }
+
+/* The card on stage */
+.stage { position: relative; justify-self: center; width: 100%; max-width: 450px; perspective: 1200px; }
+.halo { position: absolute; inset: -14% -18%; background: radial-gradient(closest-side, rgba(243,220,154,.22), transparent 72%); filter: blur(10px); z-index: -1; }
+.card3d { position: relative; transform-style: preserve-3d; transform: rotateX(var(--rx, 2deg)) rotateY(var(--ry, -6deg)); transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+.card3d img { display: block; width: 100%; height: auto; max-width: 100%; aspect-ratio: 4/5; border-radius: 6px; box-shadow: 0 60px 100px -40px rgba(0,0,0,.95), 0 0 0 1px rgba(201,162,76,.35); }
+.card3d .glare { position: absolute; inset: 0; border-radius: 6px; pointer-events: none; background: radial-gradient(400px 300px at var(--gx, 30%) var(--gy, 20%), rgba(255,244,207,.18), transparent 60%); mix-blend-mode: screen; }
+.stage .tag { position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%); white-space: nowrap; }
+
+/* Ribbon */
+.ribbon { margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); border-block: 1px solid rgba(201,162,76,.35); background: linear-gradient(180deg, #0d0b07, #080705); overflow: hidden; }
+.ribbon-track { display: flex; width: max-content; animation: drift 60s linear infinite; }
+.ribbon span { font-family: var(--serif); font-style: italic; font-size: 26px; padding: 16px 0; white-space: nowrap; color: var(--gold-hi); }
+.ribbon i { display: inline-block; width: 6px; height: 6px; transform: rotate(45deg); background: var(--gold); margin: 0 30px; vertical-align: middle; }
+@keyframes drift { to { transform: translateX(-50%); } }
 
 /* Wall */
-.wall { padding-block: 80px 48px; }
-.wall-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; margin-bottom: 32px; }
-h2 { font-family: var(--serif); font-weight: 500; font-size: clamp(38px, 5vw, 56px); line-height: 1; margin: 10px 0 0; }
+.wall { padding-block: 96px 56px; }
+.wall-head { display: grid; justify-items: center; text-align: center; gap: 14px; margin-bottom: 48px; }
+.ornament { width: 150px; height: 18px; }
+h2 { font-family: var(--serif); font-weight: 500; font-size: clamp(40px, 5.4vw, 64px); line-height: 1; margin: 0; text-wrap: balance; }
 h2 em { font-weight: 600; }
-.count { color: var(--ivory-soft); font-variant-numeric: tabular-nums; font-size: 14px; letter-spacing: .08em; }
+.count { color: var(--ivory-soft); font-variant-numeric: tabular-nums; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
 
-.composer { background: var(--black-2); border: 1px solid var(--line); padding: 24px; display: grid; gap: 16px; margin-bottom: 48px; }
-.composer label { font-family: var(--serif); font-size: 24px; font-weight: 600; }
-.composer textarea { width: 100%; min-height: 120px; resize: vertical; border: 0; border-radius: 2px; padding: 18px; font: 500 22px/1.45 var(--serif); color: var(--pick-ink, #1a150c); background: var(--pick, #f4ecdb); transition: background .2s ease, color .2s ease; }
-.composer textarea::placeholder { color: currentColor; opacity: .45; }
+.composer { position: relative; max-width: 760px; margin: 0 auto 64px; background: linear-gradient(180deg, #14110c, #0e0c08); border: 1px solid rgba(201,162,76,.28); padding: 28px; display: grid; gap: 18px; }
+.composer::before, .composer::after { content: ""; position: absolute; width: 18px; height: 18px; border: 1px solid var(--gold); }
+.composer::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+.composer::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+.composer label { font-family: var(--serif); font-size: 28px; font-weight: 500; font-style: italic; }
+.composer textarea { width: 100%; min-height: 140px; resize: vertical; border: 0; border-radius: 2px; padding: 22px 24px; font: 500 23px/1.5 var(--serif); color: var(--pick-ink, #1a150c); background: var(--grain), var(--pick, #f4ecdb); background-blend-mode: soft-light, normal; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08), 0 20px 40px -24px rgba(0,0,0,.9); transition: background-color .25s ease, color .25s ease; }
+.composer textarea::placeholder { color: currentColor; opacity: .4; font-style: italic; }
 .composer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
-.swatches { display: flex; gap: 10px; align-items: center; }
-.swatches .lbl { color: var(--ivory-soft); font-size: 13px; margin-right: 4px; }
-.swatch { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(201,162,76,.5); cursor: pointer; padding: 0; }
-.swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--black-2), 0 0 0 3px var(--gold-hi); }
-.composer-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.chars { color: var(--ivory-soft); font-size: 13px; font-variant-numeric: tabular-nums; }
+.swatches { display: flex; gap: 12px; align-items: center; }
+.swatches .lbl { color: var(--ivory-soft); font-size: 11px; letter-spacing: .3em; text-transform: uppercase; margin-right: 4px; }
+.swatch { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(201,162,76,.5); cursor: pointer; padding: 0; transition: transform .2s ease; }
+.swatch:hover { transform: scale(1.1); }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--black-2), 0 0 0 4px var(--gold-hi); }
+.composer-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.chars { color: var(--ivory-soft); font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .06em; }
 .chars.over { color: #ff9b8a; }
 .link-btn { background: none; border: 0; color: var(--ivory-soft); font: 500 13px var(--sans); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 4px; }
-.notice { border: 1px solid var(--line); padding: 18px 20px; color: var(--ivory-soft); margin-bottom: 40px; font-size: 15px; }
-.status { min-height: 1.5em; font-size: 13px; color: var(--ivory-soft); }
+.notice { max-width: 760px; margin: 0 auto 48px; border: 1px solid var(--line); padding: 20px 24px; color: var(--ivory-soft); font-family: var(--serif); font-size: 20px; font-style: italic; text-align: center; }
+.status { min-height: 1.5em; font-size: 13px; color: var(--gold-hi); }
 
-.notes { columns: 3 280px; column-gap: 24px; }
-.note { break-inside: avoid; margin: 0 0 24px; padding: 26px 24px 18px; border-radius: 2px; box-shadow: 0 24px 40px -24px rgba(0,0,0,.9); display: grid; gap: 18px; transition: transform .2s ease; position: relative; }
-.note:hover { transform: translateY(-2px); }
-.note.dark { box-shadow: inset 0 0 0 1px rgba(201,162,76,.55), 0 24px 40px -24px rgba(0,0,0,.9); }
-.note p { margin: 0; font: 500 21px/1.45 var(--serif); white-space: pre-wrap; overflow-wrap: anywhere; }
-.note footer { display: flex; align-items: center; gap: 10px; font-size: 13px; border-top: 1px solid currentColor; border-top-color: color-mix(in srgb, currentColor 18%, transparent); padding-top: 12px; }
-.note .av { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: 11px; flex: none; background: color-mix(in srgb, currentColor 12%, transparent); }
-.note .who { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.note .when { margin-left: auto; opacity: .6; white-space: nowrap; }
-.note .rm { background: none; border: 0; cursor: pointer; font: 500 12px var(--sans); color: inherit; opacity: .6; text-decoration: underline; padding: 2px; }
-.note.mine::before { content: "Yours"; position: absolute; top: -9px; right: 16px; background: var(--gold); color: var(--black); font: 600 10px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; padding: 5px 8px; }
-.empty { text-align: center; padding: 56px 16px; color: var(--ivory-soft); border: 1px solid var(--line); }
-.empty strong { display: block; color: var(--ivory); font-family: var(--serif); font-weight: 500; font-style: italic; font-size: 30px; margin-bottom: 6px; }
+.notes { columns: 3 300px; column-gap: 28px; }
+.note { break-inside: avoid; position: relative; margin: 0 0 28px; padding: 40px 30px 22px; border-radius: 2px; background-image: var(--grain); background-blend-mode: soft-light; box-shadow: 0 30px 50px -28px rgba(0,0,0,.95), inset 0 0 0 1px rgba(0,0,0,.06); display: grid; gap: 22px; transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease; }
+.note:hover { transform: translateY(-4px) rotate(-.3deg); box-shadow: 0 40px 60px -30px rgba(0,0,0,.95), inset 0 0 0 1px rgba(0,0,0,.06); }
+.note.dark { box-shadow: inset 0 0 0 1px rgba(201,162,76,.5), 0 30px 50px -28px rgba(0,0,0,.95); }
+.note::before { content: "\201C"; position: absolute; top: 2px; left: 22px; font: 600 70px/1 var(--serif); opacity: .22; }
+.note p { margin: 0; font: 500 22px/1.5 var(--serif); white-space: pre-wrap; overflow-wrap: anywhere; }
+.note footer { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.note .who { font-family: var(--serif); font-style: italic; font-size: 19px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note .when { margin-left: auto; opacity: .55; white-space: nowrap; font-size: 12px; letter-spacing: .04em; }
+.note .rm { background: none; border: 0; cursor: pointer; font: 500 12px var(--sans); color: inherit; opacity: .55; text-decoration: underline; padding: 2px; }
+.note.mine::after { content: "Yours"; position: absolute; top: 14px; right: 16px; font: 600 10px/1 var(--sans); letter-spacing: .24em; text-transform: uppercase; opacity: .6; }
 
-.foot { border-top: 1px solid var(--line); padding-block: 28px 44px; color: var(--ivory-soft); font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+/* Wax seal used for avatars */
+.seal { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center; font: 600 17px/1 var(--serif); color: #4a360e;
+  background: radial-gradient(circle at 35% 30%, #fff1c4, #e2bd67 38%, #b48b37 70%, #8a6a2a);
+  box-shadow: inset 0 0 0 3px rgba(255,241,196,.35), inset 0 -3px 6px rgba(80,55,10,.45), 0 3px 8px rgba(0,0,0,.35); text-shadow: 0 1px 0 rgba(255,241,196,.6); }
+.faces .seal { border: 2px solid var(--black); width: 32px; height: 32px; font-size: 15px; }
+
+.empty { max-width: 760px; margin: 0 auto; text-align: center; padding: 56px 24px; color: var(--ivory-soft); border: 1px solid var(--line); }
+.empty strong { display: block; color: var(--ivory); font-family: var(--serif); font-weight: 500; font-style: italic; font-size: 32px; margin-bottom: 8px; }
+
+.foot { border-top: 1px solid var(--line); padding-block: 36px 52px; display: grid; justify-items: center; gap: 12px; text-align: center; color: var(--ivory-soft); font-size: 13px; }
+.foot .sig { font-family: var(--serif); font-style: italic; font-size: 26px; }
 #burst { position: fixed; inset: 0; pointer-events: none; z-index: 20; }
 
-@media (max-width: 820px) {
-  .hero { padding-top: calc(env(safe-area-inset-top, 0px) + 40px); padding-bottom: 60px; }
-  .hero-grid { grid-template-columns: minmax(0,1fr); gap: 48px; }
-  .card-frame { max-width: 360px; }
+@media (max-width: 860px) {
+  .hero { padding-top: calc(env(safe-area-inset-top, 0px) + 44px); padding-bottom: 88px; }
+  .hero-grid { grid-template-columns: minmax(0,1fr); gap: 64px; }
+  .stage { max-width: 360px; }
   .lede { font-size: 20px; }
+  .wall { padding-block: 72px 40px; }
+  .composer { padding: 20px; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .note:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .card3d { transform: none; }
+}
 </style>
 
 <canvas id="burst" aria-hidden="true"></canvas>
 
 <header class="hero">
+  <canvas id="dust" aria-hidden="true"></canvas>
   <div class="wrap hero-grid">
     <div>
-      <div class="meta label"><span>TRYSA community</span><span class="diamond"></span><span>24 November 2026</span></div>
-      <h1><span class="l1 foil">Happy</span><span class="l2 foil">Birthday</span><span class="l3">to <span id="founder-name">our Founder</span></span></h1>
-      <div class="rule" aria-hidden="true"><span></span><i></i></div>
-      <p class="lede">Today we celebrate the person who started TRYSA. Thank you for the vision, the late nights, and for building a home for all of us. Leave a wish on the wall below.</p>
+      <div class="seal-row">
+        <svg class="monogram" viewBox="0 0 56 56" aria-hidden="true">
+          <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a6a2a"/><stop offset=".45" stop-color="#fbe9b0"/><stop offset="1" stop-color="#a8822f"/></linearGradient></defs>
+          <circle cx="28" cy="28" r="26.5" fill="none" stroke="url(#g)" stroke-width="1"/>
+          <circle cx="28" cy="28" r="22.5" fill="none" stroke="url(#g)" stroke-width=".6" stroke-dasharray="1.5 2.5"/>
+          <text x="28" y="36.5" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-style="italic" font-weight="600" font-size="25" fill="url(#g)">T</text>
+        </svg>
+        <div class="meta"><span class="label">The TRYSA community</span><span class="date">Monday, 24 November 2026</span></div>
+      </div>
+      <h1><span class="l1 foil">Happy</span><span class="l2 foil">Birthday</span></h1>
+      <div class="to"><span>to <span id="founder-name">our Founder</span></span></div>
+      <p class="lede">Today we celebrate the person who started TRYSA. Thank you for the vision, the late nights, and for building a home for all of us.</p>
       <div class="actions">
         <a class="btn btn-gold" href="#wall">Leave a wish</a>
         <button class="btn btn-line" id="save-card" type="button">Save the card</button>
       </div>
       <div class="tally" aria-live="polite"><div class="faces" id="faces"></div><span id="tally-text">The wall is open for wishes</span></div>
     </div>
-    <figure class="card-frame">
-      <img src="card.png" alt="Black and gold birthday card: Happy Birthday to our Founder, the one who started it all. With love, the TRYSA community, 24 November 2026." width="1080" height="1350">
-      <figcaption class="label">From all of us</figcaption>
-    </figure>
+    <div class="stage" id="stage">
+      <div class="halo" aria-hidden="true"></div>
+      <div class="card3d" id="card3d">
+        <img src="card.png" alt="Black and gold birthday card: Happy Birthday to our Founder, the one who started it all. With love, the TRYSA community, 24 November 2026." width="1080" height="1350">
+        <div class="glare" aria-hidden="true"></div>
+      </div>
+      <span class="tag label">From all of us</span>
+    </div>
   </div>
 </header>
+
+<div class="ribbon" aria-hidden="true">
+  <div class="ribbon-track" id="ribbon"></div>
+</div>
 
 <main class="wrap">
   <section class="wall" id="wall" aria-labelledby="wall-title">
     <div class="wall-head">
-      <div>
-        <div class="label">The wishes wall</div>
-        <h2 id="wall-title">Words from <em class="foil">the community</em></h2>
-      </div>
+      <svg class="ornament" viewBox="0 0 150 18" aria-hidden="true"><path d="M0 9 H58 M92 9 H150" stroke="#c9a24c" stroke-width=".8"/><path d="M75 1 L83 9 L75 17 L67 9 Z" fill="none" stroke="#c9a24c" stroke-width=".9"/><circle cx="75" cy="9" r="2.2" fill="#f3dc9a"/><circle cx="62" cy="9" r="1.2" fill="#c9a24c"/><circle cx="88" cy="9" r="1.2" fill="#c9a24c"/></svg>
+      <div class="label">The wishes wall</div>
+      <h2 id="wall-title">Words from <em class="foil">the community</em></h2>
       <span class="count" id="count"></span>
     </div>
 
     <form class="composer" id="composer" hidden>
-      <label for="wish-text" id="composer-label">Your birthday wish</label>
+      <label for="wish-text" id="composer-label">Write your wish</label>
       <textarea id="wish-text" maxlength="400" placeholder="Happy birthday! Thank you for…"></textarea>
       <div class="composer-row">
-        <div class="swatches" role="group" aria-label="Note style"><span class="lbl">Note</span></div>
+        <div class="swatches" role="group" aria-label="Paper"><span class="lbl">Paper</span></div>
         <div class="composer-actions">
           <span class="chars" id="chars">0 / 280</span>
           <button class="link-btn" type="button" id="remove-mine" hidden>Remove my wish</button>
-          <button class="btn btn-gold" type="submit" id="post">Post wish</button>
+          <button class="btn btn-gold" type="submit" id="post">Seal &amp; post</button>
         </div>
       </div>
       <div class="status" id="status" aria-live="polite"></div>
     </form>
-    <div class="notice" id="notice">Loading the wall…</div>
+    <div class="notice" id="notice">Opening the wall…</div>
 
     <div class="notes" id="notes"></div>
   </section>
 </main>
 
 <footer class="wrap foot">
-  <span>Made by the TRYSA team · 24 November 2026</span>
-  <span>One wish per person. You can edit yours any time.</span>
+  <svg class="ornament" viewBox="0 0 150 18" aria-hidden="true"><path d="M0 9 H58 M92 9 H150" stroke="#c9a24c" stroke-width=".8"/><path d="M75 1 L83 9 L75 17 L67 9 Z" fill="none" stroke="#c9a24c" stroke-width=".9"/><circle cx="75" cy="9" r="2.2" fill="#f3dc9a"/></svg>
+  <span class="sig foil">With love, the TRYSA community</span>
+  <span>24 November 2026 · One wish each, yours to edit any time</span>
 </footer>
 
 <script>
 (() => {
   const MAX = 280;
-  // [name, background, ink, dark?]
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // [name, paper, ink, dark?]
   const COLORS = [
     ["ivory", "#f4ecdb", "#1a150c", false],
-    ["champagne", "#ead7a8", "#1a150c", false],
-    ["gold", "#d4ad5a", "#140f06", false],
-    ["onyx", "#15120c", "#f3dc9a", true],
+    ["champagne", "#ecdcb4", "#1a150c", false],
+    ["gold", "#d8b466", "#140f06", false],
+    ["onyx", "#16130d", "#f3dc9a", true],
   ];
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   const s = { db: null, user: null, myId: null, isAdmin: false, wishes: [], names: {}, pick: 0, mine: null, busy: false, loaded: false };
 
+  // Ribbon: "happy birthday" in several languages, doubled for a seamless loop
+  const greetings = ["Happy birthday", "Joyeux anniversaire", "Feliz cumpleaños", "Buon compleanno", "Alles Gute zum Geburtstag", "Feliz aniversário", "Gelukkige verjaardag", "Grattis på födelsedagen", "Wszystkiego najlepszego", "Iyi ki doğdun"];
+  const rib = $("ribbon");
+  for (let k = 0; k < 2; k++) greetings.forEach((g) => { const sp = el("span", null, g); sp.appendChild(el("i")); rib.appendChild(sp); });
+
+  // Paper picker
   const sw = document.querySelector(".swatches");
   COLORS.forEach(([name, bg], i) => {
     const b = el("button", "swatch"); b.type = "button"; b.style.background = bg;
-    b.setAttribute("aria-label", name); b.setAttribute("aria-pressed", String(i === 0));
+    b.setAttribute("aria-label", name + " paper"); b.setAttribute("aria-pressed", String(i === 0));
     b.addEventListener("click", () => setPick(i)); sw.appendChild(b);
   });
   function setPick(i) {
@@ -219,25 +287,25 @@ h2 em { font-weight: 600; }
 
   function render() {
     const list = s.wishes;
-    $("count").textContent = list.length ? list.length + (list.length === 1 ? " wish" : " wishes") : "";
+    $("count").textContent = list.length ? list.length + (list.length === 1 ? " wish so far" : " wishes so far") : "";
     const faces = $("faces"); faces.replaceChildren();
     if (list.length) {
-      list.slice(0, 4).forEach((w, i) => { const st = styleOf(w, i); const f = el("span", null, initial(s.names[w.id])); f.style.background = st[1]; f.style.color = st[2]; faces.appendChild(f); });
+      list.slice(0, 4).forEach((w) => faces.appendChild(el("span", "seal", initial(s.names[w.id]))));
       $("tally-text").textContent = list.length + (list.length === 1 ? " person has" : " people have") + " left a wish";
     } else $("tally-text").textContent = "The wall is open for wishes";
 
     const notes = $("notes"); notes.replaceChildren();
     if (!list.length) {
-      if (s.db && s.loaded) { const e = el("div", "empty"); e.appendChild(el("strong", null, "No wishes yet")); e.appendChild(el("span", null, "Be the first to write something for the founder.")); notes.appendChild(e); }
+      if (s.db && s.loaded) { const e = el("div", "empty"); e.appendChild(el("strong", null, "The first page is yours")); e.appendChild(el("span", null, "No wishes yet. Write the first one for the founder.")); notes.appendChild(e); }
       return;
     }
     list.forEach((w, i) => {
       const st = styleOf(w, i);
       const n = el("article", "note" + (st[3] ? " dark" : "") + (w.id === s.myId ? " mine" : ""));
-      n.style.background = st[1]; n.style.color = st[2];
+      n.style.backgroundColor = st[1]; n.style.color = st[2];
       n.appendChild(el("p", null, w.text));
-      const f = el("footer"); const name = s.names[w.id] || (w.id === s.myId ? "You" : "Someone");
-      f.appendChild(el("span", "av", initial(name))); f.appendChild(el("span", "who", name));
+      const f = el("footer"); const name = s.names[w.id] || (w.id === s.myId ? "You" : "A friend");
+      f.appendChild(el("span", "seal", initial(name))); f.appendChild(el("span", "who", name));
       if (s.isAdmin && w.id !== s.myId) {
         const rm = el("button", "rm", "Remove"); rm.type = "button";
         rm.addEventListener("click", async () => { rm.disabled = true; try { await s.db.doc("wishes/" + w.id).delete(); } catch (_) { rm.disabled = false; rm.textContent = "Couldn't remove"; } });
@@ -250,20 +318,20 @@ h2 em { font-weight: 600; }
 
   function syncComposer() {
     const has = !!s.mine;
-    $("composer-label").textContent = has ? "Your wish" : "Your birthday wish";
-    $("post").textContent = has ? "Update wish" : "Post wish";
+    $("composer-label").textContent = has ? "Your wish" : "Write your wish";
+    $("post").textContent = has ? "Update wish" : "Seal & post";
     $("remove-mine").hidden = !has;
   }
 
   $("composer").addEventListener("submit", async (e) => {
     e.preventDefault();
     const t = text.value.trim(); if (!t || t.length > MAX || !s.db || !s.myId) return;
-    s.busy = true; updateChars(); $("status").textContent = "Posting…";
+    s.busy = true; updateChars(); $("status").textContent = "Sealing your wish…";
     const now = Date.now();
     const body = { text: t, color: s.pick, createdAt: (s.mine && s.mine.createdAt) || now, updatedAt: now };
     try {
       await s.db.doc("wishes/" + s.myId).set(body);
-      $("status").textContent = s.mine ? "Wish updated." : "Wish posted. Thank you!";
+      $("status").textContent = s.mine ? "Your wish is updated." : "Your wish is on the wall. Thank you!";
       burst();
     } catch (err) {
       $("status").textContent = (err && (err.code === "permission_denied" || err.code === "invalid_argument"))
@@ -290,18 +358,49 @@ h2 em { font-weight: 600; }
     } catch (_) { b.textContent = "Press and hold the card to save"; }
   });
 
+  // Card tilt and glare follow the pointer
+  const stage = $("stage"), card = $("card3d");
+  if (!reduce) {
+    stage.addEventListener("pointermove", (e) => {
+      const r = stage.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      card.style.setProperty("--ry", ((px - .5) * 16).toFixed(2) + "deg"); card.style.setProperty("--rx", ((.5 - py) * 12).toFixed(2) + "deg");
+      card.style.setProperty("--gx", (px * 100).toFixed(1) + "%"); card.style.setProperty("--gy", (py * 100).toFixed(1) + "%");
+    });
+    stage.addEventListener("pointerleave", () => { ["--rx", "--ry", "--gx", "--gy"].forEach((p) => card.style.removeProperty(p)); });
+  }
+
+  // Drifting gold dust behind the hero
+  (function dust() {
+    const c = $("dust"), x = c.getContext("2d"); let w = 0, h = 0, parts = [];
+    function size() {
+      const dpr = Math.min(devicePixelRatio || 1, 2); const r = c.getBoundingClientRect();
+      w = r.width; h = r.height; c.width = w * dpr; c.height = h * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
+      parts = Array.from({ length: Math.round(w * h / 9000) }, () => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.6 + .3, v: Math.random() * .25 + .05, a: Math.random() * .6 + .15, t: Math.random() * 6.28 }));
+    }
+    function draw() {
+      x.clearRect(0, 0, w, h);
+      parts.forEach((p) => {
+        if (!reduce) { p.y -= p.v; p.t += .02; if (p.y < -4) { p.y = h + 4; p.x = Math.random() * w; } }
+        x.globalAlpha = p.a * (.6 + .4 * Math.sin(p.t)); x.fillStyle = p.r > 1.3 ? "#fbe9b0" : "#c9a24c";
+        x.beginPath(); x.arc(p.x + Math.sin(p.t) * 6, p.y, p.r, 0, 6.283); x.fill();
+      });
+      if (!reduce) requestAnimationFrame(draw);
+    }
+    size(); draw(); addEventListener("resize", () => { size(); if (reduce) draw(); });
+  })();
+
   // Gold-leaf burst after posting
   function burst() {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (reduce) return;
     const c = $("burst"), x = c.getContext("2d"), dpr = devicePixelRatio || 1;
     c.width = innerWidth * dpr; c.height = innerHeight * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
     const cols = ["#f3dc9a", "#c9a24c", "#fbe9b0", "#a8822f", "#f4ecdb"];
-    const ps = Array.from({ length: 120 }, () => ({ x: innerWidth / 2, y: innerHeight * .62, vx: (Math.random() - .5) * 14, vy: -Math.random() * 15 - 6, w: Math.random() * 9 + 4, c: cols[(Math.random() * cols.length) | 0], a: Math.random() * 6, spin: (Math.random() - .5) * .4 }));
+    const ps = Array.from({ length: 140 }, () => ({ x: innerWidth / 2, y: innerHeight * .62, vx: (Math.random() - .5) * 14, vy: -Math.random() * 15 - 6, w: Math.random() * 9 + 4, c: cols[(Math.random() * cols.length) | 0], a: Math.random() * 6, spin: (Math.random() - .5) * .4 }));
     const t0 = performance.now();
     (function f(t) {
-      const k = (t - t0) / 1800; x.clearRect(0, 0, innerWidth, innerHeight);
+      const k = (t - t0) / 2000; x.clearRect(0, 0, innerWidth, innerHeight);
       if (k >= 1) return;
-      ps.forEach((p) => { p.vy += .4; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.spin; x.save(); x.globalAlpha = 1 - k; x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.w / 2, -p.w / 4, p.w, p.w / 2 * Math.abs(Math.cos(p.a * 2)) + 1); x.restore(); });
+      ps.forEach((p) => { p.vy += .38; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.spin; x.save(); x.globalAlpha = 1 - k; x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.w / 2, -p.w / 4, p.w, p.w / 2 * Math.abs(Math.cos(p.a * 2)) + 1); x.restore(); });
       requestAnimationFrame(f);
     })(t0);
   }
@@ -322,7 +421,7 @@ h2 em { font-weight: 600; }
     if (canPost) { $("composer").hidden = false; notice.hidden = true; }
     else notice.textContent = "You can read the wall. Posting a wish needs contributor access from the page owner.";
 
-    const timer = setTimeout(() => { if (!s.loaded) { notice.hidden = false; notice.textContent = "The wall is taking a while to load. Refresh the page to try again."; } }, 10000);
+    const timer = setTimeout(() => { if (!s.loaded) { notice.hidden = false; notice.textContent = "The wall is taking a while to open. Refresh the page to try again."; } }, 10000);
     db.collection("wishes").orderBy("createdAt", "desc").limit(300).onSnapshot(async (snap) => {
       s.loaded = true; clearTimeout(timer);
       if (canPost) notice.hidden = true;
@@ -332,7 +431,7 @@ h2 em { font-weight: 600; }
       s.mine = mine; syncComposer(); updateChars();
       await resolveNames(s.wishes.map((w) => w.id).filter((id) => !(id in s.names)));
       render();
-    }, () => { clearTimeout(timer); notice.hidden = false; notice.textContent = "The wall couldn't load. Refresh the page to try again."; });
+    }, () => { clearTimeout(timer); notice.hidden = false; notice.textContent = "The wall couldn't open. Refresh the page to try again."; });
   }
   start();
 })();
