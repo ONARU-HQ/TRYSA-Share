@@ -1,0 +1,325 @@
+<title>Founder's Birthday Wall</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: split hero (words left, the card right) over a confetti-note wishes wall; one column on phones.
+   Single deliberate night-blue look that matches the card, so no light theme. */
+:root {
+  --night: #081430;        /* page ground, the card's deep blue */
+  --night-2: #0e1f47;      /* raised surfaces */
+  --line: #24386b;         /* hairlines on night */
+  --ink: #f3f6ff;          /* primary text */
+  --ink-soft: #aab7d9;     /* secondary text */
+  --blue: #0a6cff;         /* TRYSA accent */
+  --blue-2: #5ea1ff;
+  --c-blue: #cfe2ff; --c-green: #c9f2d6; --c-orange: #ffe0b3; --c-pink: #ffd3e3; --c-white: #ffffff;
+  --note-ink: #10162a;
+  --display: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--night); color: var(--ink); font: 16px/1.55 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overflow-x: hidden;
+}
+.wrap { max-width: 1120px; margin: 0 auto; }
+:focus-visible { outline: 3px solid var(--blue-2); outline-offset: 3px; border-radius: 6px; }
+
+/* Hero */
+.hero {
+  margin-top: calc(-1 * env(safe-area-inset-top, 0px)); padding-top: calc(env(safe-area-inset-top, 0px) + 56px); padding-bottom: 72px;
+  margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: radial-gradient(900px 560px at 72% 40%, rgba(10,108,255,.42), transparent 70%),
+              radial-gradient(500px 400px at 5% 100%, rgba(255,79,139,.14), transparent 70%), var(--night);
+  border-bottom: 1px solid var(--line);
+}
+.hero-grid { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr); gap: 56px; align-items: center; }
+.eyebrow { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue-2); }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(44px, 7vw, 88px); line-height: .95; letter-spacing: -.035em; margin: 22px 0 20px; text-wrap: balance; }
+h1 em { font-style: normal; color: var(--blue-2); }
+.lede { font-size: 19px; color: var(--ink-soft); max-width: 34em; margin: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.btn { appearance: none; border: 0; cursor: pointer; font: 600 16px/1 var(--body); padding: 16px 22px; border-radius: 999px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; transition: transform .15s ease, background .15s ease; }
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: #1f7bff; }
+.btn-ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); }
+.btn-ghost:hover { box-shadow: inset 0 0 0 1.5px var(--blue-2); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.tally { margin-top: 28px; display: flex; align-items: center; gap: 12px; color: var(--ink-soft); font-size: 15px; }
+.faces { display: flex; }
+.faces span { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 12px/1 var(--body); color: var(--note-ink); border: 2px solid var(--night); margin-left: -8px; }
+.faces span:first-child { margin-left: 0; }
+.card-frame { position: relative; justify-self: center; width: 100%; max-width: 440px; }
+.card-frame img { display: block; width: 100%; height: auto; max-width: 100%; aspect-ratio: 4/5; border-radius: 22px; transform: rotate(2.5deg); box-shadow: 0 40px 80px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.08); }
+.card-tag { position: absolute; left: -14px; bottom: 28px; background: var(--c-white); color: var(--note-ink); font: 600 13px/1.2 var(--body); padding: 10px 14px; border-radius: 12px; transform: rotate(-4deg); box-shadow: 0 12px 30px rgba(0,0,0,.35); }
+
+/* Wall */
+.wall { padding-block: 64px 40px; }
+.wall-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; margin-bottom: 28px; }
+h2 { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 4vw, 44px); letter-spacing: -.02em; line-height: 1; margin: 0; }
+.count { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+.composer { background: var(--night-2); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: grid; gap: 14px; margin-bottom: 40px; }
+.composer label { font-weight: 600; }
+.composer textarea { width: 100%; min-height: 110px; resize: vertical; border-radius: 14px; border: 0; padding: 16px; font: 18px/1.5 var(--body); color: var(--note-ink); background: var(--pick, var(--c-blue)); transition: background .2s ease; }
+.composer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+.swatches { display: flex; gap: 10px; align-items: center; }
+.swatches .lbl { color: var(--ink-soft); font-size: 14px; margin-right: 4px; }
+.swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.swatch[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 3px var(--night-2) inset; }
+.composer-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.chars { color: var(--ink-soft); font-size: 14px; font-variant-numeric: tabular-nums; }
+.chars.over { color: #ff8fa3; }
+.link-btn { background: none; border: 0; color: var(--ink-soft); font: 500 14px var(--body); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 4px; }
+.notice { border: 1px dashed var(--line); border-radius: 16px; padding: 18px 20px; color: var(--ink-soft); margin-bottom: 40px; }
+.status { min-height: 1.5em; font-size: 14px; color: var(--ink-soft); }
+
+.notes { columns: 3 280px; column-gap: 22px; }
+.note { break-inside: avoid; margin: 0 0 22px; padding: 22px 22px 16px; border-radius: 6px 18px 18px 18px; color: var(--note-ink); box-shadow: 0 18px 30px -18px rgba(0,0,0,.6); transform: rotate(var(--tilt, 0deg)); transition: transform .2s ease; display: grid; gap: 16px; }
+.note:hover { transform: rotate(0deg) translateY(-2px); }
+.note p { margin: 0; font-size: 17px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.note footer { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.note .av { width: 28px; height: 28px; border-radius: 50%; background: rgba(16,22,42,.12); display: grid; place-items: center; font-weight: 700; font-size: 12px; flex: none; }
+.note .who { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note .when { margin-left: auto; opacity: .6; white-space: nowrap; }
+.note .rm { background: none; border: 0; cursor: pointer; font: 500 13px var(--body); color: var(--note-ink); opacity: .55; text-decoration: underline; padding: 2px; }
+.note.mine { outline: 2px solid var(--blue); outline-offset: 3px; }
+.empty { text-align: center; padding: 48px 16px; color: var(--ink-soft); border: 1px dashed var(--line); border-radius: 20px; }
+.empty strong { display: block; color: var(--ink); font-family: var(--display); font-size: 24px; margin-bottom: 6px; }
+
+.foot { border-top: 1px solid var(--line); padding-block: 28px 40px; color: var(--ink-soft); font-size: 14px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+#burst { position: fixed; inset: 0; pointer-events: none; z-index: 20; }
+
+@media (max-width: 820px) {
+  .hero { padding-top: calc(env(safe-area-inset-top, 0px) + 36px); padding-bottom: 48px; }
+  .hero-grid { grid-template-columns: minmax(0,1fr); gap: 40px; }
+  .card-frame { max-width: 360px; }
+  .card-tag { left: 0; }
+  .lede { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .note, .card-frame img { transform: none; } }
+</style>
+
+<canvas id="burst" aria-hidden="true"></canvas>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow"><span>TRYSA community</span><span class="dot"></span><span>23 November 2026</span></div>
+      <h1>Happy birthday to <em id="founder-name">our Founder</em></h1>
+      <p class="lede">Today we celebrate the person who started TRYSA. Thank you for the vision, the late nights, and for building a home for all of us. Leave a wish on the wall below.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#wall">Leave a wish</a>
+        <button class="btn btn-ghost" id="save-card" type="button">Save the card</button>
+      </div>
+      <div class="tally" id="tally" aria-live="polite"><div class="faces" id="faces"></div><span id="tally-text">The wall is open for wishes</span></div>
+    </div>
+    <figure class="card-frame" style="margin:0">
+      <img src="card.png" alt="Birthday card: Happy Birthday to our Founder, the one who started it all. With love, the TRYSA community, 23 November 2026." width="1080" height="1350">
+      <figcaption class="card-tag">From all of us 🎂</figcaption>
+    </figure>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="wall" id="wall" aria-labelledby="wall-title">
+    <div class="wall-head">
+      <h2 id="wall-title">Wishes from the community</h2>
+      <span class="count" id="count"></span>
+    </div>
+
+    <form class="composer" id="composer" hidden>
+      <label for="wish-text" id="composer-label">Your birthday wish</label>
+      <textarea id="wish-text" maxlength="400" placeholder="Happy birthday! Thank you for…"></textarea>
+      <div class="composer-row">
+        <div class="swatches" role="group" aria-label="Note colour"><span class="lbl">Note colour</span></div>
+        <div class="composer-actions">
+          <span class="chars" id="chars">0 / 280</span>
+          <button class="link-btn" type="button" id="remove-mine" hidden>Remove my wish</button>
+          <button class="btn btn-primary" type="submit" id="post">Post wish</button>
+        </div>
+      </div>
+      <div class="status" id="status" aria-live="polite"></div>
+    </form>
+    <div class="notice" id="notice">Loading the wall…</div>
+
+    <div class="notes" id="notes"></div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <span>Made by the TRYSA team for 23 November 2026</span>
+  <span>One wish per person. You can edit yours any time.</span>
+</footer>
+
+<script>
+(() => {
+  const MAX = 280;
+  const COLORS = [["blue","var(--c-blue)"],["green","var(--c-green)"],["orange","var(--c-orange)"],["pink","var(--c-pink)"],["white","var(--c-white)"]];
+  const TILTS = ["-1.6deg","1.2deg","-0.6deg","1.8deg","-1.1deg","0.7deg"];
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const s = { db: null, user: null, myId: null, isAdmin: false, wishes: [], names: {}, pick: 0, mine: null, busy: false };
+
+  // Colour picker
+  const sw = document.querySelector(".swatches");
+  COLORS.forEach(([name, v], i) => {
+    const b = el("button", "swatch"); b.type = "button"; b.style.background = v;
+    b.setAttribute("aria-label", name); b.setAttribute("aria-pressed", String(i === 0));
+    b.addEventListener("click", () => setPick(i)); sw.appendChild(b);
+  });
+  function setPick(i) {
+    s.pick = i; $("composer").style.setProperty("--pick", COLORS[i][1]);
+    sw.querySelectorAll(".swatch").forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
+  }
+
+  const text = $("wish-text");
+  function updateChars() {
+    const n = text.value.trim().length; const c = $("chars");
+    c.textContent = n + " / " + MAX; c.classList.toggle("over", n > MAX);
+    $("post").disabled = s.busy || n === 0 || n > MAX;
+  }
+  text.addEventListener("input", updateChars);
+
+  function ago(ms) {
+    if (!ms) return "";
+    const m = Math.round((Date.now() - ms) / 60000);
+    if (m < 1) return "just now"; if (m < 60) return m + "m ago";
+    const h = Math.round(m / 60); if (h < 24) return h + "h ago";
+    return Math.round(h / 24) + "d ago";
+  }
+  const initial = (name) => (name || "?").trim().charAt(0).toUpperCase() || "?";
+  const colorOf = (w, i) => COLORS[(Number.isInteger(w.color) && w.color >= 0 && w.color < COLORS.length) ? w.color : i % COLORS.length][1];
+
+  async function resolveNames(ids) {
+    if (!s.user || !ids.length) return;
+    try { const ps = await s.user.profiles(ids); ids.forEach((id) => { s.names[id] = (ps && ps[id] && ps[id].name) || ""; }); } catch (_) {}
+  }
+
+  function render() {
+    const list = s.wishes;
+    $("count").textContent = list.length ? list.length + (list.length === 1 ? " wish" : " wishes") : "";
+    const tt = $("tally-text"), faces = $("faces"); faces.replaceChildren();
+    if (list.length) {
+      list.slice(0, 4).forEach((w, i) => { const f = el("span", null, initial(s.names[w.id])); f.style.background = colorOf(w, i); faces.appendChild(f); });
+      tt.textContent = list.length + (list.length === 1 ? " person has" : " people have") + " left a wish";
+    } else tt.textContent = "The wall is open for wishes";
+
+    const notes = $("notes"); notes.replaceChildren();
+    if (!list.length) {
+      if (s.db) { const e = el("div", "empty"); e.appendChild(el("strong", null, "No wishes yet")); e.appendChild(el("span", null, "Be the first to write something for the founder.")); notes.appendChild(e); }
+      return;
+    }
+    list.forEach((w, i) => {
+      const n = el("article", "note" + (w.id === s.myId ? " mine" : ""));
+      n.style.background = colorOf(w, i); n.style.setProperty("--tilt", TILTS[i % TILTS.length]);
+      n.appendChild(el("p", null, w.text));
+      const f = el("footer"); const name = s.names[w.id] || (w.id === s.myId ? "You" : "Someone");
+      f.appendChild(el("span", "av", initial(name))); f.appendChild(el("span", "who", w.id === s.myId ? name + " (you)" : name));
+      if (s.isAdmin && w.id !== s.myId) {
+        const rm = el("button", "rm", "Remove"); rm.type = "button";
+        rm.addEventListener("click", async () => { rm.disabled = true; try { await s.db.doc("wishes/" + w.id).delete(); } catch (_) { rm.disabled = false; rm.textContent = "Couldn't remove"; } });
+        f.appendChild(rm);
+      }
+      f.appendChild(el("span", "when", ago(w.updatedAt || w.createdAt)));
+      n.appendChild(f); notes.appendChild(n);
+    });
+  }
+
+  function syncComposer() {
+    const has = !!s.mine;
+    $("composer-label").textContent = has ? "Your wish (you can edit it)" : "Your birthday wish";
+    $("post").textContent = has ? "Update wish" : "Post wish";
+    $("remove-mine").hidden = !has;
+  }
+
+  // Post / update
+  $("composer").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const t = text.value.trim(); if (!t || t.length > MAX || !s.db || !s.myId) return;
+    s.busy = true; updateChars(); $("status").textContent = "Posting…";
+    const now = Date.now();
+    const body = { text: t, color: s.pick, createdAt: (s.mine && s.mine.createdAt) || now, updatedAt: now };
+    try {
+      await s.db.doc("wishes/" + s.myId).set(body);
+      $("status").textContent = s.mine ? "Wish updated." : "Wish posted. Thank you!";
+      burst();
+    } catch (err) {
+      $("status").textContent = (err && err.code === "permission_denied") || (err && err.code === "invalid_argument")
+        ? "You can read the wall but not post on it. Ask the page owner for contributor access."
+        : "Your wish didn't post. Check your connection and try again.";
+    } finally { s.busy = false; updateChars(); }
+  });
+  $("remove-mine").addEventListener("click", async () => {
+    if (!s.db || !s.myId) return;
+    const b = $("remove-mine");
+    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "Tap again to remove"; return; }
+    b.dataset.confirm = ""; b.textContent = "Remove my wish";
+    try { await s.db.doc("wishes/" + s.myId).delete(); text.value = ""; updateChars(); $("status").textContent = "Your wish was removed."; }
+    catch (_) { $("status").textContent = "Couldn't remove your wish. Try again."; }
+  });
+
+  // Save the card
+  let dl = null;
+  $("save-card").addEventListener("click", async () => {
+    const b = $("save-card");
+    try {
+      if (!dl) throw new Error("none");
+      const blob = await (await fetch("card.png")).blob();
+      await dl.save({ filename: "trysa-founder-birthday-card.png", data: blob });
+    } catch (_) { b.textContent = "Press and hold the card to save"; }
+  });
+
+  // Confetti burst
+  function burst() {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const c = $("burst"), x = c.getContext("2d"), dpr = devicePixelRatio || 1;
+    c.width = innerWidth * dpr; c.height = innerHeight * dpr; x.scale(dpr, dpr);
+    const cols = ["#0a6cff","#5ea1ff","#30c85e","#ff9f0a","#ff4f8b","#ffffff"];
+    const ps = Array.from({ length: 140 }, () => ({ x: innerWidth / 2, y: innerHeight * .6, vx: (Math.random() - .5) * 16, vy: -Math.random() * 16 - 6, r: Math.random() * 6 + 3, c: cols[(Math.random() * cols.length) | 0], a: Math.random() * 6 }));
+    const t0 = performance.now();
+    (function f(t) {
+      const k = (t - t0) / 1600; x.clearRect(0, 0, innerWidth, innerHeight);
+      if (k >= 1) return;
+      ps.forEach((p) => { p.vy += .45; p.x += p.vx; p.y += p.vy; p.a += .2; x.save(); x.globalAlpha = 1 - k; x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.r, -p.r / 2, p.r * 2, p.r); x.restore(); });
+      requestAnimationFrame(f);
+    })(t0);
+  }
+
+  // Boot
+  setPick(0); updateChars();
+  const notice = $("notice");
+  async function start() {
+    const use = window.claude && window.claude.use;
+    if (!use) { notice.textContent = "Open this page on claude.ai to read and leave wishes."; return; }
+    const [db, user, downloads] = await Promise.all([use("db"), use("user"), use("downloads")]);
+    s.db = db; s.user = user; dl = downloads;
+    if (!dl) $("save-card").textContent = "Press and hold the card to save";
+    if (!db) { notice.textContent = "Sign in to claude.ai to read the wall and leave a wish."; return; }
+    s.myId = user ? await user.id() : null;
+    s.isAdmin = user ? !!(await user.canEdit()) : false;
+    const canWrite = user ? await user.can("data.write") : null;
+    if (s.myId && canWrite !== false) { $("composer").hidden = false; notice.hidden = true; }
+    else notice.textContent = "You can read the wall. Posting a wish needs contributor access from the page owner.";
+
+    const timer = setTimeout(() => { if (!s.loaded) notice.hidden = false, notice.textContent = "The wall is taking a while to load. Refresh the page to try again."; }, 10000);
+    db.collection("wishes").orderBy("createdAt", "desc").limit(300).onSnapshot(async (snap) => {
+      s.loaded = true; clearTimeout(timer);
+      if (s.myId && canWrite !== false) notice.hidden = true;
+      s.wishes = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((w) => typeof w.text === "string" && w.text.trim());
+      const mine = s.wishes.find((w) => w.id === s.myId) || null;
+      if (mine && !s.mine && !text.value) { text.value = mine.text; if (Number.isInteger(mine.color)) setPick(mine.color); }
+      s.mine = mine; syncComposer(); updateChars();
+      await resolveNames(s.wishes.map((w) => w.id).filter((id) => !(id in s.names)));
+      render();
+    }, () => { clearTimeout(timer); notice.hidden = false; notice.textContent = "The wall couldn't load. Refresh the page to try again."; });
+  }
+  start();
+})();
+</script>
